@@ -5,6 +5,8 @@ Usage:   neo4j_health [ optional args ]
 Purpose: Report and plot various statistics about the database/cluster as well as its current state
 
 Inputs:
+<Min|H|D|W|Y>
+
 	[ -i | --interval    ]  <Min|H|D|W|Y>
 	[ -p | --periods     ]  <nn>
 	[ -s | --startdate   ]  <yyyy-mm-dd>
