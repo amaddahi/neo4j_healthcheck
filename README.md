@@ -22,7 +22,7 @@ Inputs:
 	o:  If interval and periods are both not specified, daily aggregation will be performed by default
 	o:  If no metric category is specified, it will report on "ALL" metrics
 	o:  To running host/online-db  healthchecks, use "--checkdb=True" o "-c"
-	o:  To avoid running historical metric reporint, use "--metric none"
+	o:  To avoid running historical metric analysis, use "--metric none"
 
                Examples:
                =========
