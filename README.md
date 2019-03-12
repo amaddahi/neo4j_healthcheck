@@ -21,7 +21,7 @@ Inputs:
 	o:  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
 	o:  If interval and periods are both not specified, daily aggregation will be performed by default
 	o:  If no metric category is specified, it will report on "ALL" metrics
-	o:  To running host/online-db  healthchecks, use "--checkdb=True" o "-c"
+	o:  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 	o:  To avoid running historical metric analysis, use "--metric none"
 
                Examples:
