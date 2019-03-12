@@ -7,15 +7,15 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 Inputs:
 <Min|H|D|W|Y>
 
-	[ -i | --interval    ]  <Min|H|D|W|Y>
-	[ -p | --periods     ]  <nn>
-	[ -s | --startdate   ]  <yyyy-mm-dd>
-	[ -e | --enddate     ]  <yyyy-mm-dd>
-	[ -l | --dbcheck     ]  <True|False>
-	[ -m | --metric      ]  <"transaction"|"page_cache"|"bolt"|"causal_clustering"|
+	[ -i | --interval    ]  < Min|H|D|W|Y >
+	[ -p | --periods     ]  < nn >
+	[ -s | --startdate   ]  < yyyy-mm-dd >
+	[ -e | --enddate     ]  < yyyy-mm-dd >
+	[ -l | --dbcheck     ]  < True|False >
+	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
-				"all"|"none">
+				"all"|"none" >
 
 	o:  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 	o:  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
