@@ -11,7 +11,7 @@ Inputs:
 	[ -p | --periods     ]  < nn >
 	[ -s | --startdate   ]  < yyyy-mm-dd >
 	[ -e | --enddate     ]  < yyyy-mm-dd >
-	[ -l | --dbcheck     ]  < True|False >
+	[ -c | --checkdb     ]  < True|False >
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
