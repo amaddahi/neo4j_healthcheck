@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-#
 # Author: Ali Maddahian
 # Last Update 3/12/2019
-#
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -186,27 +184,6 @@ def get_env():
         exit(2)
 
 
-def convert_epoch_date(file):
-
-    f = open(file, "r")
-    lines = f.readlines()
-    f.close()
-    filetmp = file + ".tmp"
-
-    os.system("cp " + file + " " + file + ".tmp")
-    f = open(filetmp, "w")
-
-    i = 1
-    for line in lines:
-        if i > 1 and "t," not in line:
-            f.write(line)
-        elif i == 1:
-            f.write(line)
-        i += 1
-    f.close()
-    os.system("sed -i .bak 's/^t/date/g' " + filetmp)
-    return filetmp
-
 def get_filenames(metric_category):
     if metric_category == 'server':
         filenames = [
@@ -313,6 +290,8 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'cypher':
         filenames = [
+            #["neo4j.cypher.replan_events.csv", 1, "-ps"],
+            #["neo4j.cypher.replan_wait_time.csv", 2, ""]
             ["neo4j.cypher.replan_events.csv", 1, "-ps"],
             ["neo4j.cypher.replan_wait_time.csv", 2, ""]
         ]
@@ -404,7 +383,7 @@ def pre_process_files(start_date, end_date, metric_category):
     #df = pd.read_csv(filetmp, parse_dates=['date'], date_parser=lambda epoch: pd.to_datetime(epoch, unit='s'))
 
     os.system("rm " + filetmp)
-    os.system("rm " + filetmp + ".bak")
+    #os.system("rm " + filetmp + ".bak")
 
     #
     # Change epoch to UTC timestamp
@@ -818,9 +797,10 @@ def merge_csv_files(filenames, metric_category):
 
     for file in filenames:
 
-        filetmp_x = working_directory + "/tmpfile_x"
-        filetmp_i = working_directory + "/tmpfile_i"
+        filetmp_x = working_directory + "/filetmp_x"
+        filetmp_i = working_directory + "/filetmp_i"
         metrics_file = metrics_directory + "/" + file[0]
+        metrics_concat_file = working_directory + "/" + file[0] + ".cat"
 
         file_type = file[0].split('.')[1]
 
@@ -849,26 +829,27 @@ def merge_csv_files(filenames, metric_category):
 
         # rename the label from value to custom label name
         #
-        cmd = "cut -d, -f1,2 " + metrics_file + " | sed 's/count/value/g' |  sed 's/value/" + val_label + "/g'  > " + filetmp_i
+
+        cmd="(head -1 " + metrics_file  + " | sed 's/^t/date/g'  && cat `ls -1r " +  metrics_file + "* ` | grep -v '^t'  ) > filename1 && mv filename1 " + metrics_concat_file
         os.system(cmd)
 
+        cmd = "cut -d, -f1,2 " + metrics_concat_file + " | sed 's/count/value/g' |  sed 's/value/" + val_label + "/g'  > " + filetmp_i
+        os.system(cmd)
+
+
+
         if i == 1:
-            #cmd = "cp " + filetmp_i + " " + all_metric_filetmp
-            os.system(cmd)
             os.system("cp " + filetmp_i + " " + all_metric_filetmp)
         elif i > 1:
-            cmd = "cut -d, -f2  tmpfile_i | paste -d,  " + \
-                all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
+            cmd = "cut -d, -f2  " + filetmp_i + "  | paste -d,  " + all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
             os.system(cmd)
 
+        os.system("rm " + metrics_concat_file)
         i += 1
 
-    filetmp2 = convert_epoch_date(all_metric_filetmp)
-
     os.system("rm " + filetmp_i)
-    os.system("rm " + all_metric_filetmp)
 
-    return filetmp2
+    return all_metric_filetmp
 
 
 def usage(value):
@@ -884,6 +865,7 @@ Inputs:
 	[ -s | --startdate   ]  <yyyy-mm-dd>
 	[ -e | --enddate     ]  <yyyy-mm-dd>
 	[ -l | --checkdb     ]  <True|False>
+	[ -v | --verbose     ]  
 	[ -m | --metric      ]  <"transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
