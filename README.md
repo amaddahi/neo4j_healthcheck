@@ -12,6 +12,7 @@ Inputs:
 	[ -s | --startdate   ]  < yyyy-mm-dd >
 	[ -e | --enddate     ]  < yyyy-mm-dd >
 	[ -c | --checkdb     ]  < True|False >
+	[ -v | --verbose     ]
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
