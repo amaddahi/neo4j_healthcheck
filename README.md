@@ -43,6 +43,9 @@ Inputs:
                     # Report on four one-week periods
 
                --interval Y -periods 2  --startdate 2018-01-01
+	       
+	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15'
+	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours
 
 Outputs:   Sample output ....
 
