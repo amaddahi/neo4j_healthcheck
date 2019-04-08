@@ -90,7 +90,8 @@ Dependencies:
 	o Export DB_PWD
 	o APOC
 	o Python2 or Python3
-	o Pandas - sudo pip install pandas
-	o ConfigObj - sudo pip install configobj
+	o Pandas     - sudo pip install pandas
+	o ConfigObj  - sudo pip install configobj
+	o Matplotlib - sudo pip install matplotlib
 </pre>
 
