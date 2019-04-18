@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 4/11/2019
+# Last Update 4/18/2019
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -1055,13 +1055,16 @@ def main(argv):
                 end_date = arg
             elif opt in ('-m', '--metric'):
                 metric_category = arg
+                if metric_category not in ("transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation", "all","none"):
+                    print(" " )
+                    print("ERROR: Incorrect parameter:" + arg)
+                    print(" " )
+                    usage(metric_category)
+                    exit(1)
             elif opt in ('-v', '--verbose'):
                 verbose = True
             elif opt in ('-c', '--checkdb'):
                 checkdb = arg
-                if metric_category not in ("transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation", "all","none"):
-                    usage(metric_category)
-                    exit(1)
             elif opt in ('--port'):
                 bolt_port = arg
             elif opt in ('-o', '--outfile'):
