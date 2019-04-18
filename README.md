@@ -85,13 +85,69 @@ tx.terminated_write-ps_Max           0           1           1           1      
 
 
 Dependencies:
+
 	o Export NEO4J_HOME
 	o Export DB_USER
 	o Export DB_PWD
 	o APOC
 	o Python2 or Python3
-	o Pandas     - sudo pip install pandas
-	o ConfigObj  - sudo pip install configobj
-	o Matplotlib - sudo pip install matplotlib
+	o Pandas     
+	o ConfigObj  
+	o Matplotlib 
+	
+Enabling cvs metrics:
+
+	o Set the following in neo4j.conf and restart the instance.
+	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   A 		value of zero will capture and log all successfully completed queries in the query.log file.
+	
+	dbms.logs.query.parameter_logging_enabled=true
+	dbms.logs.query.time_logging_enabled=true
+	dbms.logs.query.allocation_logging_enabled=true
+	dbms.logs.query.page_logging_enabled=true
+	dbms.logs.query.enabled=true
+	dbms.logs.query.threshold=0
+	
+	metrics.enabled=true
+	metrics.neo4j.enabled=true
+	metrics.neo4j.tx.enabled=true
+	metrics.neo4j.pagecache.enabled=true
+	metrics.neo4j.counts.enabled=true
+	metrics.neo4j.network.enabled=true
+	metrics.csv.enabled=true
+	metrics.csv.interval=3s
+	metrics.csv.rotation.size=10M
+	dbms.track_query_allocation=true
+	dbms.track_query_cpu_time=true
+
+
+Python Installation Instructions(Ubuntu):
+
+	o sudo apt install unzip
+	o sudo apt-get install software-properties-common
+	o sudo apt-add-repository universe
+	o sudo apt-get update
+
+	# Python2
+	o sudo apt-get install python-pip
+	o sudo pip install pandas
+	o sudo pip install configobj
+	o sudo pip install matplotlib
+
+	# Python3
+	o sudo apt-get install python3-pip
+	o sudo pip3 install pandas
+	o sudo pip3 install configobj
+	o sudo pip3 install matplotlib
+
+Instructions to run the script:
+
+	1) Download the script
+	2) chmod +x neo4j_health
+	3) ensure the python along with its dependencies as outline above are installed
+	4) Run the script.   If [ -c | --checkdb ] option is optionally used, then ensure DB_USER, DB_PASSWD as well as      		NEO4J_HOME are also set.  The script does expect to run an analysis of stats in the metrics directory. As such, cvs
+	   metrics also needs to have been enabled and contain some data for proper analysis.  By default, the script will
+	   look for the metrics directory in the current working directory, and if not found, it will then look under the
+	   directory specified by NEO4j_HOME.
+	   
 </pre>
 
