@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 4/18/2019
+# Last Update 4/25/2019
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -27,7 +27,8 @@ db_pwd = None
 neo4j_home = None
 working_directory = None
 metrics_directory = None
-metrics_csv_interval = 3  # seconds
+results_directory = None
+#metrics_csv_interval = 3  # seconds
 empty_metrics_directory= False
 all_csv_filename = "neo4j_health.csv"
 process_metrics = None
@@ -144,6 +145,7 @@ def get_env():
     global working_directory
     global metrics_directory
     global empty_metrics_directory
+    global results_directory
 
     db_user = os.environ.get("DB_USER")
     db_pwd = os.environ.get("DB_PWD")
@@ -151,6 +153,10 @@ def get_env():
     working_directory = os.getcwd()
     neo4j_home = os.environ.get('NEO4J_HOME')
 
+    results_directory=working_directory + "/metrics_plots"
+
+    if not os.path.isdir(results_directory):
+        os.makedirs(results_directory)
 
     if neo4j_home:
         dbms_directories_metrics = os.path.join(neo4j_home, 'metrics')
@@ -161,7 +167,7 @@ def get_env():
         else:
             empty_metrics_directory=True
             print("")
-            print ("Exiting:  Can not find any csv files in the metrics directory in this folder")
+            print ("Exiting:  Can not find any CSV metrics files in the metrics directory in this folder")
             print("")
             exit(1)
     elif neo4j_home:
@@ -171,7 +177,7 @@ def get_env():
                 else:
                     empty_metrics_directory=True
                     print("")
-                    print("Exiting:  Can not find any csv files in " + metrics_directory )
+                    print("Exiting:  Can not find any CSV metrics files in " + metrics_directory )
                     print("")
                     exit(1)
     else:
@@ -195,20 +201,6 @@ def get_filenames(metric_category):
         filenames = [
             ["neo4j.log_rotation.events.csv", 0, ""],
             ["neo4j.log_rotation.total_time.csv", 2, ""]
-    ]
-    elif metric_category == 'causal_clustering2':
-        filenames = [
-            ["neo4j.causal_clustering.core.message_processing_delay.csv",0,""],
-            ["neo4j.causal_clustering.core.tx_retries.csv",0,""],
-            ["neo4j.causal_clustering.core.is_leader.csv",0,""],
-            ["neo4j.causal_clustering.core.leader_not_found.csv",1,"-ps"],
-            ["neo4j.causal_clustering.core.term.csv",1,"-ps"],
-            ["neo4j.causal_clustering.core.in_flight_cache.element_count.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.hits.csv",1,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.misses.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.max_bytes.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.max_elements.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.total_bytes.csv",0,""]
     ]
     elif metric_category == 'causal_clustering':
         filenames = [
@@ -291,16 +283,14 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'cypher':
         filenames = [
-            #["neo4j.cypher.replan_events.csv", 1, "-ps"],
-            #["neo4j.cypher.replan_wait_time.csv", 2, ""]
             ["neo4j.cypher.replan_events.csv", 1, "-ps"],
             ["neo4j.cypher.replan_wait_time.csv", 2, ""]
         ]
     elif metric_category == 'bolt2':
         filenames = [
             ["neo4j.bolt.messages_done.csv", 1, "-ps"],
-            ["neo4j.bolt.connections_closed.csv", 1, "-ps"],
-            ["neo4j.bolt.connections_opened.csv", 1, "-ps"]
+            ["neo4j.bolt.connections_opened.csv", 1, "-ps"],
+            ["neo4j.bolt.accumulated_queue_time.csv", 2, ""]
         ]
     elif metric_category == 'page_cache':
         filenames = [
@@ -366,6 +356,97 @@ def get_filenames(metric_category):
 
     return filenames_keep
 
+def inspect_file_start(metrics_category):
+    filenames = get_filenames(metrics_category)
+
+    final_endtime=1735689600
+    final_starttime=0
+
+    for file in filenames:
+        metrics_file = metrics_directory + "/" + file[0]
+        f = open(metrics_file, "r")
+        lines = f.readlines()
+        f.close()
+    
+        max_timestamp=0 
+        min_timestamp=1735689600 # (1/1/2025)
+        
+        for line in lines:
+            if "t," not in line:
+                cur_timestamp=int(line.split(',')[0])
+                if cur_timestamp < min_timestamp:
+                    min_timestamp=cur_timestamp
+                if cur_timestamp > max_timestamp:
+                    max_timestamp=cur_timestamp
+                #break
+
+        if max_timestamp < final_endtime:
+            final_endtime = max_timestamp
+        if min_timestamp > final_starttime:
+            final_starttime = min_timestamp
+
+        #print(metrics_file + "  --"  + str(final_starttime)  + "--" + str(final_endtime) )
+
+    for file in filenames:
+        metrics_file = metrics_directory + "/" + file[0]
+        f = open(metrics_file, "r")
+        lines = f.readlines()
+        f.close()
+
+        metrics_file = metrics_directory + "/" + file[0] + ".final"
+        f = open(metrics_file, "w")
+        #f.write("t,value")
+        i = 0
+        for line in lines:
+                i += 1
+                if "t," not in line:
+                     cur_timestamp=int(line.split(',')[0])
+                     #print(line)
+                     #print(str(cur_timestamp))
+                     #print(str(final_starttime))
+                     #print(str(final_endtime))
+                     #print(' ')
+                     #if (cur_timestamp > final_endtime) or (cur_timestamp < final_starttime):
+                if ( final_starttime  <= cur_timestamp <= final_endtime):
+                     f.write(line)
+                 #if (i == 4):
+                     #exit()
+        f.close()
+
+     
+def flag_server_restarts():
+    filenames = get_filenames("server")
+    for file in filenames:
+        metrics_file = metrics_directory + "/" + file[0]
+
+    f = open(metrics_file, "r")
+    lines = f.readlines()
+    f.close()
+
+    print ("###################################################################")
+    print (" ")
+    print ("Database Restarts: ")
+    print (" ")
+
+    timestamp_cur=0
+    flag_start=False
+    i = 1
+    for line in lines:
+        timestamp_prev=timestamp_cur
+        if "t," not in line:
+            timestamp_cur=int(line.split(',')[0])
+
+        if flag_start is True:
+            restart_timestamp=int(line.split(',')[0])
+            converted_restart_timestamp=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(restart_timestamp))
+            print(converted_restart_timestamp)
+            flag_start=False
+        if "t," in line:
+            flag_start=True
+        i += 1
+    metrics_csv_interval=timestamp_cur-timestamp_prev
+    return metrics_csv_interval
+
 
 def pre_process_files(start_date, end_date, metric_category):
 
@@ -386,6 +467,8 @@ def pre_process_files(start_date, end_date, metric_category):
     os.system("rm " + filetmp)
     #os.system("rm " + filetmp + ".bak")
 
+    #df.to_csv(metric_category + "0.csv")
+
     #
     # Change epoch to UTC timestamp
     #
@@ -395,6 +478,7 @@ def pre_process_files(start_date, end_date, metric_category):
     # drop any rows with null values - indicating mismatched enddates
     #
     df = df.dropna()
+
     return df
 
 
@@ -403,6 +487,11 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
     #
     # if no options are specified, gather stats for the last 24 hours with available data
     #
+
+
+    start_date_min = df.date.min()
+    end_date_max = df.date.max()
+
 
     if options is False:
         start_date = df.date.min()
@@ -442,13 +531,31 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
             delta = str(periods)+"Y"
         end_date = pd.Timestamp(start_date) + pd.to_timedelta(delta)
 
-    print ('startdate :', pd.Timestamp(start_date))
-    print ('enddate   :', pd.Timestamp(end_date))
+    print ('min_startdate:           ', pd.Timestamp(start_date_min))
+    print ('max_enddate:             ', pd.Timestamp(end_date_max))
+    print ('')
+    print ('search_startdate:        ', pd.Timestamp(start_date))
+    print ('search_enddate:          ', pd.Timestamp(end_date))
     print ('')
     print ('')
 
-    df = df[df.date < end_date]
-    df = df[df.date > start_date]
+    if ( pd.Timestamp(start_date) > pd.Timestamp(end_date_max) ):
+         print(" ")
+         print(" ")
+         print ("Exiting:  Invalid Start Search Date(" +  str(pd.Timestamp(start_date)) + ") is outside of the Max range of available metrics(" + str(pd.Timestamp(end_date_max)) + ")" )
+         print(" ")
+         print(" ")
+         return 1
+
+    if ( pd.Timestamp(end_date) > pd.Timestamp(end_date_max) ):
+         df = df[df.date < end_date_max]
+    else:
+         df = df[df.date < end_date]
+ 
+    if ( pd.Timestamp(start_date) < pd.Timestamp(start_date_min) ):
+         df = df[df.date > start_date_min]
+    else:
+         df = df[df.date > start_date]
 
     return df
 
@@ -498,6 +605,7 @@ def process_cumulative_counters(interval, df, metric_category):
         # val_label = re.sub('metrics/','', x2)
         val_label = val_label + file[2]
 
+
         #add a counter for total 
         if file[1] == 1:  # obtain rate of change per second between two points in time
             df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
@@ -520,30 +628,28 @@ def process_cumulative_counters(interval, df, metric_category):
 
 def get_stats(start_date, end_date, metric_category, interval, periods, options):
 
-    #if (metric_category == 'causal_clustering' ) and ((dbms_mode == None) or (neo4j_home == None)):
-        #print ('Local Processing: ')
-        #print (dbms_mode)
-        #print (neo4j_home)
-        #return
-    #if (metric_category == 'causal_clustering' ) and ( dbms_mode not in ('CORE','READ_REPLICA')):
-        #print (" ")
-        #print ("###################################################################")
-        #print (" ")
-        #return
-
     print (" ")
     print ("###################################################################")
     print (" ")
     msg= "Summarizing Stats:  " + metric_category
-    if metric_category == 'network':
-        msg = msg + "  (Collected for HA clusters only)"
-    print(msg)
-    print (" ")
-    print (" ")
 
+    if metric_category == 'network':
+       for file in os.listdir(metrics_directory):
+           if fnmatch.fnmatch(file, "*causal_clustering*"):
+               msg = msg + "  --> Collected for HA clusters only"
+               print(msg)
+               return
+    else:
+       print(msg)
+           
+
+    print (" ")
+    print (" ")
     df = pre_process_files(start_date, end_date, metric_category)
 
+
     #df.to_csv(metric_category + "1.csv")
+
 
     if start_date == None and end_date == None:
         aggr_interval = "H"
@@ -551,6 +657,9 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     df = filter_date_range(start_date, end_date, df,
                            interval, periods, options)
 
+    if not isinstance(df, pd.DataFrame):
+        if df==1:
+            return 
 
     df_org=df
 
@@ -585,10 +694,12 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     print_dataframe(df.tail(15).T)
 
     if process_metrics == 'all':
-        df.to_csv(all_csv_filename,mode='a')
+        csv_filename = results_directory + "/" + all_csv_filename
+        df.to_csv(csv_filename,mode='a')
     else:
-        df.to_csv(metric_category + ".csv")
-
+        csv_filename = results_directory + "/" + metric_category + ".csv"
+        #df.to_csv(metric_category + ".csv")
+        df.to_csv(csv_filename)
 
     plot_metric(df, metric_category)
 
@@ -711,9 +822,12 @@ def plot_metric(df, metric_category):
         column_names = list(df)
         plot_group = get_plot_group(metric_category)
 
-        pdf_filename = metric_category + ".pdf"
+        #pdf_filename = metric_category + ".pdf"
+        pdf_filename = results_directory + "/" + metric_category + ".pdf"
 
-        with PdfPages(metric_category + ".pdf") as pdf:
+        #with PdfPages(metric_category + ".pdf") as pdf:
+
+        with PdfPages(pdf_filename) as pdf:
 
             for plot_x in plot_group:
                 # print ("GRAPH: " + str(i))
@@ -803,12 +917,13 @@ def merge_csv_files(filenames, metric_category):
     all_metric_filetmp = metric_category + ".all_metrics_epoch"
     i = 1
 
+    inspect_file_start(metric_category)
 
     for file in filenames:
-
+        
         filetmp_x = working_directory + "/filetmp_x"
         filetmp_i = working_directory + "/filetmp_i"
-        metrics_file = metrics_directory + "/" + file[0]
+        metrics_file = metrics_directory + "/" + file[0] + ".final"
         metrics_concat_file = working_directory + "/" + file[0] + ".cat"
 
         file_type = file[0].split('.')[1]
@@ -840,6 +955,7 @@ def merge_csv_files(filenames, metric_category):
         #
         file_ascii=file[0] + ".ascii"
 
+
         cmd="sed $'s/[^[:print:]\t]//g'  " + metrics_file  + " > " + file_ascii
         os.system(cmd)
         #cmd="(head -1 " + metrics_file  + " | sed $'s/[^[:print:]\t]//g'  | sed 's/^t/date/g'  && cat `ls -1r " +  metrics_file + "* ` | grep -v '^t'  ) > filename1 && mv filename1 " + metrics_concat_file
@@ -851,19 +967,19 @@ def merge_csv_files(filenames, metric_category):
         os.system(cmd)
 
 
-
         if i == 1:
             os.system("cp " + filetmp_i + " " + all_metric_filetmp)
         elif i > 1:
             cmd = "cut -d, -f2  " + filetmp_i + "  | paste -d,  " + all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
             os.system(cmd)
 
+
+        os.system("rm " + metrics_file)
         os.system("rm " + metrics_concat_file)
         os.system("rm " + file_ascii)
         i += 1
 
     os.system("rm " + filetmp_i)
-
     return all_metric_filetmp
 
 
@@ -1006,6 +1122,7 @@ def main(argv):
     global bolt_port
     global checkdb
     global verbose
+    global metrics_csv_interval
 
     start_date = None
     end_date = None
@@ -1085,6 +1202,8 @@ def main(argv):
 
     get_env()
 
+    metrics_csv_interval=flag_server_restarts()
+
     if verbose:
       print (" ")
       print (" ")
@@ -1105,6 +1224,7 @@ def main(argv):
       print ('METRIC-DIR          :', metrics_directory)
       print ('BOLT-PORT           :', bolt_port)
       print ('DB-CHECK            :', checkdb)
+      print ('METRICS_CSV_INTERVAL:', metrics_csv_interval)
       print (" ")
       print (" ")
       print (" ")
@@ -1115,13 +1235,16 @@ def main(argv):
     if metric_category == 'none':
         exit(0)
 
+
     if metric_category == 'all':
         process_metrics = 'all'
-        #if fnmatch.fnmatch(file, all_csv_filename):
-        if os.path.isfile(all_csv_filename):
-            os.system("mv " + all_csv_filename + " " + all_csv_filename + ".old")
+
+        csv_filename = results_directory + "/" + all_csv_filename
+
+        if os.path.isfile(csv_filename):
+            os.system("mv " + csv_filename + " " + csv_filename + ".old")
         else:
-            os.system("touch " + all_csv_filename)
+            os.system("touch " + csv_filename )
 
         for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation"):
 
