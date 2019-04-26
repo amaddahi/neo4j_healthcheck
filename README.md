@@ -10,8 +10,8 @@ Inputs:
 
 	[ -i | --interval    ]  < S|Min|H|D|W|Y >
 	[ -p | --periods     ]  < nn >
-	[ -s | --startdate   ]  < yyyy-mm-dd >
-	[ -e | --enddate     ]  < yyyy-mm-dd >
+	[ -s | --startdate   ]  < yyyy-mm-dd HH:MM:SS >
+	[ -e | --enddate     ]  < yyyy-mm-dd HH:MM:SS >
 	[ -c | --checkdb     ]  < True|False >
 	[ -v | --verbose     ]
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
