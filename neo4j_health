@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 4/25/2019
+# Last Update 4/26/2019
 
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -272,25 +272,26 @@ def get_filenames(metric_category):
         filenames = [
             ["neo4j.bolt.accumulated_processing_time.csv", 2, ""],
             ["neo4j.bolt.accumulated_queue_time.csv", 2, ""],
-            #["neo4j.bolt.messages_done.csv", 1, "-ps"],
+            ["neo4j.bolt.messages_done.csv", 1, "-ps"],
             ["neo4j.bolt.messages_received.csv", 1, "-ps"],
             ["neo4j.bolt.messages_failed.csv",1, "-ps"],
             ["neo4j.bolt.messages_started.csv", 1, "-ps"],
             ["neo4j.bolt.connections_closed.csv", 1, "-ps"],
             ["neo4j.bolt.connections_opened.csv", 1, "-ps"],
             ["neo4j.bolt.connections_running.csv", 1, "-ps"],
+            ["neo4j.bolt.connections_idle.csv", 1, "-ps"],
             ["neo4j.bolt.sessions_started.csv", 1, "-ps"]
-        ]
-    elif metric_category == 'cypher':
-        filenames = [
-            ["neo4j.cypher.replan_events.csv", 1, "-ps"],
-            ["neo4j.cypher.replan_wait_time.csv", 2, ""]
         ]
     elif metric_category == 'bolt2':
         filenames = [
             ["neo4j.bolt.messages_done.csv", 1, "-ps"],
             ["neo4j.bolt.connections_opened.csv", 1, "-ps"],
             ["neo4j.bolt.accumulated_queue_time.csv", 2, ""]
+        ]
+    elif metric_category == 'cypher':
+        filenames = [
+            ["neo4j.cypher.replan_events.csv", 1, "-ps"],
+            ["neo4j.cypher.replan_wait_time.csv", 2, ""]
         ]
     elif metric_category == 'page_cache':
         filenames = [
