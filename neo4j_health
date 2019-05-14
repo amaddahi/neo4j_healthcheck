@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 4/26/2019
+# Last Update 5/07/2019
 
+
+from datetime import datetime
+import pytz
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -19,7 +22,7 @@ import string
 from matplotlib.backends.backend_pdf import PdfPages
 from configobj import ConfigObj
 
-version = '1.0'
+version = '2.0'
 verbose = False
 
 db_user = None
@@ -35,6 +38,7 @@ process_metrics = None
 dbms_mode = None
 bolt_port = 7687
 checkdb = None
+display_precision=None
 
 def run_benchmark():
     for i in range(1,20):
@@ -49,9 +53,9 @@ def db(cypher,section_title):
        #print(cmd)
        run_shell(cmd,section_title)
 
-def run_shell(shell,section_title):
+def run_shell(shell_in,section_title):
     file_tmp="/tmp/file.out"
-    shell=shell + " > " + file_tmp
+    shell=shell_in + " > " + file_tmp
     process = subprocess.Popen(shell, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = process.communicate()[0]
     exit_code = process.returncode
@@ -66,7 +70,9 @@ def run_shell(shell,section_title):
         print (file.read() )
         file.close() 
     #else:
-        #raise Exception(shell, exit_code, output)
+        #print("ERROR: " + shell_in)
+        #raise error(shell, exit_code, output)
+        #raise Exception(shell, output)
 
     print ("")
     #print ("###################################################################")
@@ -99,7 +105,9 @@ def host_db_check():
         run_shell(" grep -n -i blocked " + neo4j_home +
               "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 5 Longest GC pauses (< 3.4+) ")
 
-        db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId', "Neo4j Active Long Running Queries ( > 60s )")
+        db('call apoc.meta.stats() yield nodeCount as n, relCount as r with  n, r with (2.0*r/((n-1)*n)) as value return round(100 * value)/100;',"Neo4j Node Density ")
+
+        db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId;', "Neo4j Active Long Running Queries ( > 60s )")
 
         db('call dbms.listQueries();',"Neo4j Active Queries ")
 
@@ -130,9 +138,17 @@ def host_db_check():
     #print ("")
 
 def print_dataframe(df):
+    print('---------')
+    print(df)
+    global display_precision
     pd.set_option('display.max_rows', 500)
-    pd.set_option('display.max_columns', 500)
+    pd.set_option('display.max_columns', 700)
     pd.set_option('display.width', 1000)
+    if display_precision:
+       pd.options.display.float_format = '{:,.1f}'.format
+    else:
+       pd.options.display.float_format = '{:,.0f}'.format
+    print('---------')
     print(df)
     print('')
     print('')
@@ -204,38 +220,40 @@ def get_filenames(metric_category):
     ]
     elif metric_category == 'causal_clustering':
         filenames = [
-            ["neo4j.causal_clustering.catchup.tx_pull_requests_received.csv",0,""],
-            ["neo4j.causal_clustering.core.append_index.csv",0,""],
-            ["neo4j.causal_clustering.core.commit_index.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.element_count.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.hits.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.max_bytes.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.max_elements.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.misses.csv",0,""],
-            ["neo4j.causal_clustering.core.in_flight_cache.total_bytes.csv",0,""],
-            ["neo4j.causal_clustering.core.is_leader.csv",0,""],
-            ["neo4j.causal_clustering.core.leader_not_found.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_delay.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.append_entries_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.append_entries_response.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.csv",0,""],
+            ["neo4j.causal_clustering.catchup.tx_pull_requests_received.csv",1,""],
+            ["neo4j.causal_clustering.core.append_index.csv",1,""],
+            ["neo4j.causal_clustering.core.commit_index.csv",1,""],
+            #["neo4j.causal_clustering.core.dropped_messages.csv",1,""],     # TODO: configurable
+            ["neo4j.causal_clustering.core.in_flight_cache.element_count.csv",1,""],
+            ["neo4j.causal_clustering.core.in_flight_cache.hits.csv",1,""],
+            ["neo4j.causal_clustering.core.in_flight_cache.max_bytes.csv",1,""],
+            ["neo4j.causal_clustering.core.in_flight_cache.max_elements.csv",1,""],
+            ["neo4j.causal_clustering.core.in_flight_cache.misses.csv",1,""],
+            ["neo4j.causal_clustering.core.in_flight_cache.total_bytes.csv",1,""],
+            ["neo4j.causal_clustering.core.is_leader.csv",0,""],    # either 0 or 1
+            ["neo4j.causal_clustering.core.leader_not_found.csv",1,""],
+            ["neo4j.causal_clustering.core.message_processing_delay.csv",0,""],                     # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.append_entries_request.csv",0,""], # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.append_entries_response.csv",0,""],# calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.csv",0,""],                     # CuC or CuT calls/second,milliseconds 
             ["neo4j.causal_clustering.core.message_processing_timer.election_timeout.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat_response.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat_timeout.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.log_compaction_info.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.new_batch_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.new_entry_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.pre_vote_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.pre_vote_response.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.prune_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.vote_request.csv",0,""],
-            ["neo4j.causal_clustering.core.message_processing_timer.vote_response.csv",0,""],
-            ["neo4j.causal_clustering.core.replication_attempt.csv",0,""],
-            ["neo4j.causal_clustering.core.replication_fail.csv",0,""],
-            ["neo4j.causal_clustering.core.replication_new.csv",0,""],
-            ["neo4j.causal_clustering.core.replication_success.csv",0,""],
-            ["neo4j.causal_clustering.core.term.csv",0,""],
+            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat.csv",0,""],           # CuC or CuT calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat_response.csv",0,""],  # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.heartbeat_timeout.csv",0,""],   # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.log_compaction_info.csv",0,""], # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.new_batch_request.csv",0,""],   # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.new_entry_request.csv",0,""],   # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.pre_vote_request.csv",0,""],    # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.pre_vote_response.csv",0,""],   # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.prune_request.csv",0,""],       # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.vote_request.csv",0,""],        # calls/second,milliseconds
+            ["neo4j.causal_clustering.core.message_processing_timer.vote_response.csv",0,""],       # calls/second,milliseconds
+            #["neo4j.causal_clustering.core.queue_sizes.csv",0,""],          #TODO: configurable
+            ["neo4j.causal_clustering.core.replication_attempt.csv",1,""],
+            ["neo4j.causal_clustering.core.replication_fail.csv",1,""],
+            ["neo4j.causal_clustering.core.replication_new.csv",1,""],
+            ["neo4j.causal_clustering.core.replication_success.csv",1,""],
+            ["neo4j.causal_clustering.core.term.csv",1,""],
             ["neo4j.causal_clustering.core.tx_retries.csv",0,""]
         ]
     elif metric_category == 'network':
@@ -278,15 +296,14 @@ def get_filenames(metric_category):
             ["neo4j.bolt.messages_started.csv", 1, "-ps"],
             ["neo4j.bolt.connections_closed.csv", 1, "-ps"],
             ["neo4j.bolt.connections_opened.csv", 1, "-ps"],
-            ["neo4j.bolt.connections_running.csv", 1, "-ps"],
-            ["neo4j.bolt.connections_idle.csv", 1, "-ps"],
+            ["neo4j.bolt.connections_running.csv", 0, "-ps"],
+            ["neo4j.bolt.connections_idle.csv", 0, "-ps"],
             ["neo4j.bolt.sessions_started.csv", 1, "-ps"]
         ]
     elif metric_category == 'bolt2':
         filenames = [
-            ["neo4j.bolt.messages_done.csv", 1, "-ps"],
-            ["neo4j.bolt.connections_opened.csv", 1, "-ps"],
-            ["neo4j.bolt.accumulated_queue_time.csv", 2, ""]
+            ["neo4j.bolt.accumulated_queue_time.csv", 2, ""],
+            ["neo4j.bolt.messages_done.csv", 1, "-ps"]
         ]
     elif metric_category == 'cypher':
         filenames = [
@@ -307,8 +324,8 @@ def get_filenames(metric_category):
     elif metric_category == 'check_point':
         filenames = [
             # collected at checkpoint times only and thus far less frequently collected than other datapointsk
-            #["neo4j.check_point.check_point_duration.csv", 2, ""],
-            ["neo4j.check_point.events.csv", 1, "-ps"],
+            ["neo4j.check_point.events.csv", 0, ""],
+            ["neo4j.check_point.check_point_duration.csv", 3, ""],
             ["neo4j.check_point.total_time.csv", 2, ""]
         ]
     elif metric_category == 'jvm_thread':
@@ -316,6 +333,11 @@ def get_filenames(metric_category):
             ["vm.thread.count.csv", 0, ""],
             ["vm.thread.total.csv", 0, ""]
         ]
+    elif metric_category == 'jvm_gc2':
+        filenames = [
+            ["vm.gc.time.g1_young_generation.csv", 2, ""],
+            ["vm.gc.time.g1_old_generation.csv", 2, ""]
+       ]
     elif metric_category == 'jvm_gc':
         filenames = [
             ["vm.gc.count.g1_old_generation.csv", 0, ""],
@@ -342,6 +364,7 @@ def get_filenames(metric_category):
     else:
         print ("Exiting:   Incorrect Metric Type.")
 
+    
     filenames_keep=[]
     filenames_delete=[]
     i=0
@@ -355,6 +378,8 @@ def get_filenames(metric_category):
  
        i=i+1
 
+    #print (filenames_keep)
+   
     return filenames_keep
 
 def inspect_file_start(metrics_category):
@@ -373,7 +398,8 @@ def inspect_file_start(metrics_category):
         min_timestamp=1735689600 # (1/1/2025)
         
         for line in lines:
-            if "t," not in line:
+            #if ("t," not in line) or ("c" not in line):
+            if ("t," not in line):
                 cur_timestamp=int(line.split(',')[0])
                 if cur_timestamp < min_timestamp:
                     min_timestamp=cur_timestamp
@@ -386,7 +412,15 @@ def inspect_file_start(metrics_category):
         if min_timestamp > final_starttime:
             final_starttime = min_timestamp
 
-        #print(metrics_file + "  --"  + str(final_starttime)  + "--" + str(final_endtime) )
+        final_starttime_tz= datetime.datetime.fromtimestamp(final_starttime)
+        final_endtime_tz= datetime.datetime.fromtimestamp(final_endtime)
+
+        #print(">>>>>>>>>>>: " + str(final_starttime_tz)  + "    " + str(final_endtime_tz)  + "  " + metrics_file )
+        #if (final_starttime >= final_endtime):
+               #print("---> detected endtime < starttime: ")
+
+    #print("final_starttime: "  + str(final_starttime)  + "final_endtime: "  + str(final_endtime) )
+    #print(" ")
 
     for file in filenames:
         metrics_file = metrics_directory + "/" + file[0]
@@ -396,7 +430,7 @@ def inspect_file_start(metrics_category):
 
         metrics_file = metrics_directory + "/" + file[0] + ".final"
         f = open(metrics_file, "w")
-        #f.write("t,value")
+        f.write("t,value\n")
         i = 0
         for line in lines:
                 i += 1
@@ -408,12 +442,12 @@ def inspect_file_start(metrics_category):
                      #print(str(final_endtime))
                      #print(' ')
                      #if (cur_timestamp > final_endtime) or (cur_timestamp < final_starttime):
-                if ( final_starttime  <= cur_timestamp <= final_endtime):
+                if ( final_starttime  < cur_timestamp < final_endtime):
                      f.write(line)
-                 #if (i == 4):
+                     #print("--> " + line)
+                #if (i == 4):
                      #exit()
         f.close()
-
      
 def flag_server_restarts():
     filenames = get_filenames("server")
@@ -430,6 +464,7 @@ def flag_server_restarts():
     print (" ")
 
     timestamp_cur=0
+    timestamp_prev=0
     flag_start=False
     i = 1
     for line in lines:
@@ -445,43 +480,58 @@ def flag_server_restarts():
         if "t," in line:
             flag_start=True
         i += 1
+        #print(str(timestamp_prev) + "  " + str(timestamp_cur) + "  " + str(timestamp_cur - timestamp_prev))
     metrics_csv_interval=timestamp_cur-timestamp_prev
     return metrics_csv_interval
 
 
 def pre_process_files(start_date, end_date, metric_category):
 
+    df2=False
     filenames = get_filenames(metric_category)
 
     #
     # Paste multiple csv files into a single file for the same metric category
     #
-    filetmp = merge_csv_files(filenames, metric_category)
+    (filetmp,single_metric_filetmp) = merge_csv_files(filenames, metric_category)
 
     #
     # Read the merged file with epoch timestamp into a dataframe
     #
     df = pd.read_csv(filetmp)
+    if single_metric_filetmp:
+        df2 = pd.read_csv(single_metric_filetmp)
 
     #df = pd.read_csv(filetmp, parse_dates=['date'], date_parser=lambda epoch: pd.to_datetime(epoch, unit='s'))
 
     os.system("rm " + filetmp)
-    #os.system("rm " + filetmp + ".bak")
 
-    #df.to_csv(metric_category + "0.csv")
+    #df.to_csv(metric_category + "_0.csv")
 
     #
     # Change epoch to UTC timestamp
     #
     df = convert_epoch_to_timestamp(df, 'UTC')
+    if single_metric_filetmp:
+        df2 = convert_epoch_to_timestamp(df2, 'UTC')
+
+    #df.to_csv(metric_category + "_1.csv")
 
     #
     # drop any rows with null values - indicating mismatched enddates
     #
     df = df.dropna()
+    if single_metric_filetmp:
+        df2 = df2.dropna()
 
-    return df
+    #df.to_csv(metric_category + "_2.csv")
 
+    #if single_metric_filetmp:
+       #return df,df2
+    #else: 
+       #return df
+
+    return df,df2
 
 def filter_date_range(start_date, end_date, df, interval, periods, options):
 
@@ -563,6 +613,7 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
 
 def process_cumulative_timings(interval, df, df_org, metric_category):
 
+    #print(list(df))
     df_org = df_org.dropna()
 
     filenames = get_filenames(metric_category)
@@ -579,16 +630,16 @@ def process_cumulative_timings(interval, df, df_org, metric_category):
 
         if file[1] == 2:  
 
-            if metric_category == 'jvm_gc':
-                df["vm.gc.time.g1_young_generation"]= np.ceil(df['vm.gc.time.g1_young_generation'].diff()).fillna(0).astype(int)
-                df["vm.gc.time.g1_old_generation"]= np.ceil(df['vm.gc.time.g1_old_generation'].diff()).fillna(0).astype(int)
+            df[val_label] = np.ceil(df[val_label].diff()).fillna(0)
 
+            #if metric_category == 'bolt':
+            #df[val_label] = np.ceil(df[val_label].diff()/(df_org["blt.messages_done-ps"].diff())).fillna(0)
+
+            if metric_category == 'jvm_gc':
                 df["Total_GC_pause_time-ms"]= np.ceil(df['vm.gc.time.g1_young_generation'] +  df['vm.gc.time.g1_old_generation']).fillna(0).astype(int)
-            else:
-                df[val_label] = np.ceil(df[val_label].diff()/(df_org[val_label].diff())).fillna(0)
 
     df = df.dropna()
-
+    #print(df[val_label] - df_org[val_label])
     return df
 
 
@@ -609,10 +660,16 @@ def process_cumulative_counters(interval, df, metric_category):
 
         #add a counter for total 
         if file[1] == 1:  # obtain rate of change per second between two points in time
-            df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
 
-            #val_label_total=val_label + "__sum"
-            #df[val_label_total] = np.ceil(df[val_label].diff()).fillna(0).astype(int)
+            #if( metric_category == 'bolt' ):
+                   #df[val_label] = df[val_label].diff().fillna(0)
+            #else:
+
+                   df[val_label] = (df[val_label].diff()).fillna(0)
+
+                   #df[val_label] = (df[val_label].diff()/metrics_csv_interval).fillna(0)
+                   #df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
+                   #df[val_label] = np.ceil(df[val_label].diff()).fillna(0).astype(int)
 
         elif ((file[1] == 0) and ( metric_category == 'jvm_memory' )):
             df["heap_size-mb"]= df['vm.memory.pool.code_cache-mb'] +  		\
@@ -623,8 +680,93 @@ def process_cumulative_counters(interval, df, metric_category):
  
             df[val_label]=df[val_label]/(1024*1024)
 
+    return df
+
+def normalize_stats(df, metric_category):
+
+    if (metric_category == 'bolt') :
+                df["blt.accumulated_processing_time_Avg"] = (df["blt.accumulated_processing_time_Avg"]/(df["blt.messages_done-ps_Avg"])).fillna(0)
+                df["blt.accumulated_processing_time_Max"] = (df["blt.accumulated_processing_time_Max"]/(df["blt.messages_done-ps_Avg"])).fillna(0)
+                df["blt.accumulated_queue_time_Avg"] = (df["blt.accumulated_queue_time_Avg"]/(df["blt.messages_done-ps_Avg"])).fillna(0)
+                df["blt.accumulated_queue_time_Max"] = (df["blt.accumulated_queue_time_Max"]/(df["blt.messages_done-ps_Avg"])).fillna(0)
+    elif (metric_category == 'cypher') :
+                # TODO
+                df["cyp.replan_events-ps_Sum"] = (df["cyp.replan_events-ps_Sum"]*metrics_csv_interval).fillna(0)
+                df["cyp.replan_events-ps_Avg"] = (df["cyp.replan_events-ps_Avg"]*metrics_csv_interval).fillna(0)
+                df["cyp.replan_events-ps_Max"] = (df["cyp.replan_events-ps_Max"]*metrics_csv_interval).fillna(0)
+                df["cyp.replan_wait_time_Avg"] = (df["cyp.replan_wait_time_Avg"]/(df["cyp.replan_events-ps_Avg"])).fillna(0)
+                df["cyp.replan_wait_time_Max"] = (df["cyp.replan_wait_time_Max"]/(df["cyp.replan_events-ps_Avg"])).fillna(0)
 
     return df
+
+def apply_output_projection(df,metric_category):
+
+        column_names = list(df)
+        #print (column_names)
+
+        if metric_category == 'check_point':
+            output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
+        elif metric_category == 'causal_clustering':
+            output_keep_list = ['cc.catchup.tx_pull_requests_received_Sum', 'cc.catchup.tx_pull_requests_received_Avg', 'cc.catchup.tx_pull_requests_received_Max' , 'cc.core.append_index_Sum', 'cc.core.append_index_Avg', 'cc.core.append_index_Max', 'cc.core.commit_index_Sum', 'cc.core.commit_index_Avg', 'cc.core.commit_index_Max', 'cc.core.in_flight_cache.element_count_Sum', 'cc.core.in_flight_cache.element_count_Avg', 'cc.core.in_flight_cache.element_count_Max', 'cc.core.in_flight_cache.hits_Sum', 'cc.core.in_flight_cache.hits_Avg', 'cc.core.in_flight_cache.hits_Max', 'cc.core.in_flight_cache.max_bytes_Sum', 'cc.core.in_flight_cache.max_bytes_Avg', 'cc.core.in_flight_cache.max_bytes_Max', 'cc.core.in_flight_cache.max_elements_Sum', 'cc.core.in_flight_cache.max_elements_Avg', 'cc.core.in_flight_cache.max_elements_Max' , 'cc.core.in_flight_cache.misses_Sum', 'cc.core.in_flight_cache.misses_Avg', 'cc.core.in_flight_cache.misses_Max', 'cc.core.in_flight_cache.total_bytes_Sum', 'cc.core.in_flight_cache.total_bytes_Avg', 'cc.core.in_flight_cache.total_bytes_Max', 'cc.core.is_leader_Sum', 'cc.core.is_leader_Avg', 'cc.core.is_leader_Max', 'cc.core.leader_not_found_Sum', 'cc.core.leader_not_found_Avg', 'cc.core.leader_not_found_Max', 'cc.core.message_processing_delay_Sum', 'cc.core.message_processing_delay_Avg', 'cc.core.message_processing_delay_Max', 'cc.core.message_processing_timer.append_entries_request_Sum', 'cc.core.message_processing_timer.append_entries_request_Avg', 'cc.core.message_processing_timer.append_entries_request_Max', 'cc.core.message_processing_timer.append_entries_response_Sum' , 'cc.core.message_processing_timer.append_entries_response_Avg', 'cc.core.message_processing_timer.append_entries_response_Max', 'cc.core.message_processing_timer_Sum'  , 'cc.core.message_processing_timer_Avg', 'cc.core.message_processing_timer_Max', 'cc.core.message_processing_timer.election_timeout_Sum', 'cc.core.message_processing_timer.election_timeout_Avg', 'cc.core.message_processing_timer.election_timeout_Max', 'cc.core.message_processing_timer.heartbeat_Sum', 'cc.core.message_processing_timer.heartbeat_Avg', 'cc.core.message_processing_timer.heartbeat_Max', 'cc.core.message_processing_timer.heartbeat_response_Sum', 'cc.core.message_processing_timer.heartbeat_response_Avg', 'cc.core.message_processing_timer.heartbeat_response_Max', 'cc.core.message_processing_timer.heartbeat_timeout_Sum', 'cc.core.message_processing_timer.heartbeat_timeout_Avg', 'cc.core.message_processing_timer.heartbeat_timeout_Max', 'cc.core.message_processing_timer.log_compaction_info_Sum', 'cc.core.message_processing_timer.log_compaction_info_Avg', 'cc.core.message_processing_timer.log_compaction_info_Max', 'cc.core.message_processing_timer.new_batch_request_Sum', 'cc.core.message_processing_timer.new_batch_request_Avg', 'cc.core.message_processing_timer.new_batch_request_Max', 'cc.core.message_processing_timer.new_entry_request_Sum', 'cc.core.message_processing_timer.new_entry_request_Avg', 'cc.core.message_processing_timer.new_entry_request_Max', 'cc.core.message_processing_timer.pre_vote_request_Sum', 'cc.core.message_processing_timer.pre_vote_request_Avg', 'cc.core.message_processing_timer.pre_vote_request_Max', 'cc.core.message_processing_timer.pre_vote_response_Sum', 'cc.core.message_processing_timer.pre_vote_response_Avg', 'cc.core.message_processing_timer.pre_vote_response_Max', 'cc.core.message_processing_timer.prune_request_Sum', 'cc.core.message_processing_timer.prune_request_Avg', 'cc.core.message_processing_timer.prune_request_Max', 'cc.core.message_processing_timer.vote_request_Sum', 'cc.core.message_processing_timer.vote_request_Avg', 'cc.core.message_processing_timer.vote_request_Max', 'cc.core.message_processing_timer.vote_response_Sum', 'cc.core.message_processing_timer.vote_response_Avg', 'cc.core.message_processing_timer.vote_response_Max', 'cc.core.replication_attempt_Sum', 'cc.core.replication_attempt_Avg', 'cc.core.replication_attempt_Max', 'cc.core.replication_fail_Sum', 'cc.core.replication_fail_Avg', 'cc.core.replication_fail_Max', 'cc.core.replication_new_Sum', 'cc.core.replication_new_Avg', 'cc.core.replication_new_Max', 'cc.core.replication_success_Sum', 'cc.core.replication_success_Avg', 'cc.core.replication_success_Max', 'cc.core.term_Sum', 'cc.core.term_Avg', 'cc.core.term_Max', 'cc.core.tx_retries_Sum', 'cc.core.tx_retries_Avg', 'cc.core.tx_retries_Max']
+        elif metric_category == 'cypher':
+            output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
+        elif metric_category == 'server':
+            output_keep_list = ['srv.threads.jetty.all_Avg', 'srv.threads.jetty.all_Max', 'srv.threads.jetty.idle_Avg', 'srv.threads.jetty.idle_Max'] 
+        elif metric_category == 'object':
+            output_keep_list = ['neo4j.ids_in_use.node_Max', 'neo4j.ids_in_use.property_Max', 'neo4j.ids_in_use.relationship_Max', 'neo4j.ids_in_use.relationship_type_Max']
+        elif metric_category == 'log_rotation':
+            output_keep_list = ['log.events_Sum', 'log.events_Avg', 'log.events_Max', 'log.total_time_Sum', 'log.total_time_Avg', 'log.total_time_Max']
+        elif metric_category == 'page_cache':
+            output_keep_list = ['pgc.hit_ratio_Avg', 'pgc.hit_ratio_Max', 'pgc.page_faults-ps_Sum', 'pgc.page_faults-ps_Avg', 'pgc.page_faults-ps_Max', 'pgc.hits-ps_Sum', 'pgc.hits-ps_Avg', 'pgc.hits-ps_Max', 'pgc.flushes-ps_Sum', 'pgc.flushes-ps_Avg', 'pgc.flushes-ps_Max', 'pgc.eviction_exceptions-ps_Sum', 'pgc.eviction_exceptions-ps_Avg', 'pgc.eviction_exceptions-ps_Max', 'pgc.evictions-ps_Sum', 'pgc.evictions-ps_Avg', 'pgc.evictions-ps_Max', 'pgc.pins-ps_Sum', 'pgc.pins-ps_Avg', 'pgc.pins-ps_Max', 'pgc.unpins-ps_Sum', 'pgc.unpins-ps_Avg', 'pgc.unpins-ps_Max']
+        elif metric_category == 'jvm_gc':
+            output_keep_list = ['vm.gc.count.g1_old_generation_Sum',  'vm.gc.count.g1_old_generation_Avg', 'vm.gc.count.g1_old_generation_Max', 'vm.gc.count.g1_young_generation-ps_Sum', 'vm.gc.count.g1_young_generation-ps_Avg', 'vm.gc.count.g1_young_generation-ps_Max', 'vm.gc.time.g1_old_generation_Sum', 'vm.gc.time.g1_old_generation_Avg', 'vm.gc.time.g1_old_generation_Max', 'vm.gc.time.g1_young_generation_Sum', 'vm.gc.time.g1_young_generation_Avg', 'vm.gc.time.g1_young_generation_Max', 'Total_GC_pause_time-ms_Sum', 'Total_GC_pause_time-ms_Avg', 'Total_GC_pause_time-ms_Max']
+        elif metric_category == 'jvm_thread':
+            output_keep_list = ['vm.thread.count_Sum', 'vm.thread.count_Avg', 'vm.thread.count_Max', 'vm.thread.total_Sum', 'vm.thread.total_Avg', 'vm.thread.total_Max']
+        elif metric_category == 'jvm_memory':
+            output_keep_list = ['vm.memory.buffer.direct.capacity-mb_Sum', 'vm.memory.buffer.direct.capacity-mb_Avg', 'vm.memory.buffer.direct.capacity-mb_Max', 'vm.memory.buffer.direct.count_Sum', 'vm.memory.buffer.direct.count_Avg', 'vm.memory.buffer.direct.count_Max', 'vm.memory.buffer.direct.used-mb_Sum', 'vm.memory.buffer.direct.used-mb_Avg', 'vm.memory.buffer.direct.used-mb_Max', 'vm.memory.buffer.mapped.capacity-mb_Sum', 'vm.memory.buffer.mapped.capacity-mb_Avg', 'vm.memory.buffer.mapped.capacity-mb_Max', 'vm.memory.buffer.mapped.count_Sum', 'vm.memory.buffer.mapped.count_Avg', 'vm.memory.buffer.mapped.count_Max', 'vm.memory.buffer.mapped.used-mb_Sum', 'vm.memory.buffer.mapped.used-mb_Avg', 'vm.memory.buffer.mapped.used-mb_Max', 'vm.memory.pool.code_cache-mb_Sum', 'vm.memory.pool.code_cache-mb_Avg', 'vm.memory.pool.code_cache-mb_Max', 'vm.memory.pool.compressed_class_space-mb_Sum', 'vm.memory.pool.compressed_class_space-mb_Avg', 'vm.memory.pool.compressed_class_space-mb_Max', 'vm.memory.pool.g1_eden_space-mb_Sum', 'vm.memory.pool.g1_eden_space-mb_Avg', 'vm.memory.pool.g1_eden_space-mb_Max', 'vm.memory.pool.g1_old_gen-mb_Sum', 'vm.memory.pool.g1_old_gen-mb_Avg', 'vm.memory.pool.g1_old_gen-mb_Max', 'vm.memory.pool.g1_survivor_space-mb_Sum', 'vm.memory.pool.g1_survivor_space-mb_Avg', 'vm.memory.pool.g1_survivor_space-mb_Max', 'vm.memory.pool.metaspace-mb_Sum', 'vm.memory.pool.metaspace-mb_Avg', 'vm.memory.pool.metaspace-mb_Max', 'heap_size-mb_Sum', 'heap_size-mb_Avg', 'heap_size-mb_Max']
+        elif metric_category == 'transaction':
+            output_keep_list = ['tx.peak_concurrent_Avg', 'tx.peak_concurrent_Max', 
+                                 'tx.started-ps_Sum', 'tx.started-ps_Avg', 'tx.started-ps_Max', 
+				 'tx.active_Sum', 'tx.active_Avg', 'tx.active_Max', 'tx.active_read_Sum', 'tx.active_read_Avg', 'tx.active_read_Max', 'tx.active_write_Sum', 'tx.active_write_Avg', 'tx.active_write_Max', 'tx.committed-ps_Sum', 'tx.committed-ps_Avg', 'tx.committed-ps_Max', 'tx.committed_read-ps_Sum', 'tx.committed_read-ps_Avg', 'tx.committed_read-ps_Max', 'tx.committed_write-ps_Sum', 'tx.committed_write-ps_Avg', 'tx.committed_write-ps_Max', 'tx.rollbacks-ps_Sum', 'tx.rollbacks-pshgCount', 'tx.rollbacks-ps_Avg', 'tx.rollbacks-ps_Max', 'tx.rollbacks_read-ps_Sum', 'tx.rollbacks_read-ps_Avg', 'tx.rollbacks_read-ps_Max', 'tx.rollbacks_write-ps_Sum', 'tx.rollbacks_write-ps_Avg', 'tx.rollbacks_write-ps_Max', 'tx.terminated-ps_Sum', 'tx.terminated-ps_Avg', 'tx.terminated-ps_Max', 'tx.terminated_read-ps_Sum', 'tx.terminated_read-ps_Avg', 'tx.terminated_read-ps_Max', 'tx.terminated_write-ps_Sum', 'tx.terminated_write-ps_Avg', 'tx.terminated_write-ps_Max']
+        elif metric_category == 'bolt':
+            output_keep_list = ['blt.accumulated_processing_time_Sum', 'blt.accumulated_processing_time_Avg', 'blt.accumulated_processing_time_Max', 'blt.accumulated_queue_time_Sum',  'blt.accumulated_queue_time_Avg', 'blt.accumulated_queue_time_Max', 'blt.messages_done-ps_Sum', 'blt.messages_done-ps_Avg', 'blt.messages_done-ps_Max', 'blt.messages_received-ps_Sum', 'blt.messages_received-ps_Avg', 'blt.messages_received-ps_Max', 'blt.messages_failed-ps_Sum', 'blt.messages_failed-ps_Avg', 'blt.messages_failed-ps_Max', 'blt.messages_started-ps_Sum', 'blt.messages_started-ps_Avg', 'blt.messages_started-ps_Max', 'blt.connections_closed-ps_Sum', 'blt.connections_closed-ps_Avg', 'blt.connections_closed-ps_Max', 'blt.connections_opened-ps_Sum', 'blt.connections_opened-ps_Avg', 'blt.connections_opened-ps_Max', 'blt.connections_running-ps_Avg', 'blt.connections_running-ps_Max', 'blt.connections_idle-ps_Avg', 'blt.connections_idle-ps_Max', 'blt.sessions_started-ps_Sum', 'blt.sessions_started-ps_Avg', 'blt.sessions_started-ps_Max']
+
+        output_delete_list = list(set(column_names) - set(output_keep_list))
+        df_output = df.drop(output_delete_list, 1, errors='ignore')
+        #print(df_output)
+     
+        for label in list(df_output):
+            #print (label)  
+            pattern_sum='-ps_Sum'
+            pattern_count='-ps_Count'
+            pattern_avg='-ps_Avg'
+            pattern_max='-ps_Max'
+            pattern_cc_message='core.message_processing'
+            pattern_cc_core='cc.core'
+            if pattern_sum in label:
+                df_output.rename(columns={label:label.replace(pattern_sum,'_Sum')}, inplace=True)
+                #print (label + "   " + label.replace(pattern_sum,'_Sum'))
+            elif pattern_count in label:
+                df_output.rename(columns={label:label.replace(pattern_count,'_Count')}, inplace=True)
+                #print (label + "   " + label.replace(pattern_count,'_Count'))
+            elif ((pattern_avg in label) and (metric_category == 'bolt') and (('connections_running' in label) or ('connections_idle' in label))) :
+                df_output.rename(columns={label:label.replace(pattern_avg,'_Avg')}, inplace=True)
+                #print (label + "   " + label.replace(pattern_avg,'_Avg'))
+            elif ((pattern_max in label) and (metric_category == 'bolt') and (('connections_running' in label) or ('connections_idle' in label))) :
+                df_output.rename(columns={label:label.replace(pattern_max,'_Max')}, inplace=True)
+            elif ((pattern_max in label) and (metric_category == 'cypher') and ('event' in label) ) :
+                df_output.rename(columns={label:label.replace(pattern_max,'_Max')}, inplace=True)
+            elif ((pattern_avg in label) and (metric_category == 'cypher') and ('event' in label) ) :
+                df_output.rename(columns={label:label.replace(pattern_avg,'_Avg')}, inplace=True)
+            elif (metric_category == 'causal_clustering')  :
+                if (pattern_cc_message in label):
+                     df_output.rename(columns={label:label.replace(pattern_cc_message,'msg_proc')}, inplace=True)
+                elif (pattern_cc_core in label) :
+                     df_output.rename(columns={label:label.replace(pattern_cc_core,'cc')}, inplace=True)
+            
+            #print (label + "   " + label.replace(pattern_max,'_Max'))
+                
+        return df_output
 
 
 def get_stats(start_date, end_date, metric_category, interval, periods, options):
@@ -643,20 +785,21 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     else:
        print(msg)
            
-
     print (" ")
     print (" ")
-    df = pre_process_files(start_date, end_date, metric_category)
-
+    (df,df2) = pre_process_files(start_date, end_date, metric_category)
 
     #df.to_csv(metric_category + "1.csv")
+    #df2.to_csv(metric_category + "12.csv")
 
-
+    # can this be moved to main?
+    #
     if start_date == None and end_date == None:
         aggr_interval = "H"
 
-    df = filter_date_range(start_date, end_date, df,
-                           interval, periods, options)
+    df = filter_date_range(start_date, end_date, df, interval, periods, options)
+    if isinstance(df2 , pd.DataFrame):
+        df2 = filter_date_range(start_date, end_date, df2, interval, periods, options)
 
     if not isinstance(df, pd.DataFrame):
         if df==1:
@@ -669,7 +812,7 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
 
     df = process_cumulative_counters(interval, df, metric_category)
 
-    #df.to_csv(metric_category + "cumu_cntr_3.csv")
+    #df.to_csv(metric_category + "_cumu_cntr_3.csv")
 
     df = process_cumulative_timings(interval, df, df_org, metric_category)
 
@@ -680,26 +823,53 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
 
     df = df.replace([np.inf, -np.inf], np.nan)
 
-    # print_dataframe(df.head(5))
+    #print_dataframe(df.head(5))
     # print(df.index.tolist())
 
-    df = np.ceil(df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
+    #df = np.ceil(df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
+    df = (df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
 
+    #print_dataframe(df.tail(15).T)
+    if isinstance(df2 , pd.DataFrame):
+          #df2 = np.ceil(df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
+          df2 = (df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
+          #df2 = np.ceil(df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
+
+    
     #df.to_csv(metric_category + "avg-max-5.csv")
 
+    # Reformat dataframe column labels
+    #
     df.columns = ["_".join(x) for x in df.columns.ravel()]
+    if isinstance(df2 , pd.DataFrame):
+         df2.columns = ["_".join(x) for x in df2.columns.ravel()]
 
-    if interval == 'S':
+    #print(list(df))
+
+    df = normalize_stats(df,metric_category)
+
+    # When aggregating by the seconds, remove dataframe columns where all different metrics are zero  
+    #
+    if interval in ('S','Min'):
        df=df[(df.sum(axis=1) != 0)]       
+
+    # if check_point then df = df_results
+
+    if isinstance(df2 , pd.DataFrame):
+        df = df.merge(df2,how='left', left_on='date', right_on='date')
+
+
+    df = apply_output_projection(df,metric_category)
 
     print_dataframe(df.tail(15).T)
 
+    # TODO - check this
+    #
     if process_metrics == 'all':
         csv_filename = results_directory + "/" + all_csv_filename
         df.to_csv(csv_filename,mode='a')
     else:
         csv_filename = results_directory + "/" + metric_category + ".csv"
-        #df.to_csv(metric_category + ".csv")
         df.to_csv(csv_filename)
 
     plot_metric(df, metric_category)
@@ -818,6 +988,8 @@ def check_min_max(df):
 
 def plot_metric(df, metric_category):
 
+    # check if we have enough data points for a plot  ( need >= 2) 
+    #
     if check_min_max(df):
         filenames = get_filenames(metric_category)
         column_names = list(df)
@@ -915,17 +1087,22 @@ def get_metric_category_abbr(file_type):
 
 
 def merge_csv_files(filenames, metric_category):
+    single_metric_filetmp=False
     all_metric_filetmp = metric_category + ".all_metrics_epoch"
     i = 1
 
     inspect_file_start(metric_category)
+    #exit(0)
 
     for file in filenames:
-        
+       
+
+ 
         filetmp_x = working_directory + "/filetmp_x"
         filetmp_i = working_directory + "/filetmp_i"
         metrics_file = metrics_directory + "/" + file[0] + ".final"
         metrics_concat_file = working_directory + "/" + file[0] + ".cat"
+
 
         file_type = file[0].split('.')[1]
 
@@ -956,32 +1133,33 @@ def merge_csv_files(filenames, metric_category):
         #
         file_ascii=file[0] + ".ascii"
 
-
+        # remove any binary non-printable data (might show up as result of transfering files between different host systems
+        #
         cmd="sed $'s/[^[:print:]\t]//g'  " + metrics_file  + " > " + file_ascii
         os.system(cmd)
         #cmd="(head -1 " + metrics_file  + " | sed $'s/[^[:print:]\t]//g'  | sed 's/^t/date/g'  && cat `ls -1r " +  metrics_file + "* ` | grep -v '^t'  ) > filename1 && mv filename1 " + metrics_concat_file
         cmd="(head -1 " + file_ascii  + " | sed 's/^t/date/g'  && cat `ls -1r " +  file_ascii + "* ` | grep -v '^t'  ) > filename1 && mv filename1 " + metrics_concat_file
-        #print(cmd)
         os.system(cmd)
 
-        cmd = "cut -d, -f1,2 " + metrics_concat_file + " | sed 's/count/value/g' |  sed 's/value/" + val_label + "/g'  > " + filetmp_i
+        cmd = "cut -d, -f1,2 " + metrics_concat_file + " | sed 's/count/value/g' |  sed 's/value/" + val_label + "/g'  > " + metrics_file
         os.system(cmd)
 
 
-        if i == 1:
-            os.system("cp " + filetmp_i + " " + all_metric_filetmp)
-        elif i > 1:
-            cmd = "cut -d, -f2  " + filetmp_i + "  | paste -d,  " + all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
-            os.system(cmd)
+        if file[1] != 3:
+            if i == 1:
+                os.system("cp " + metrics_file + " " + all_metric_filetmp)
+            elif i > 1:
+                cmd = "cut -d, -f2  " + metrics_file + "  | paste -d,  " + all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
+                os.system(cmd)
+            os.system("rm " + metrics_file)
+            i += 1
+        else:
+            single_metric_filetmp=metrics_file
 
-
-        os.system("rm " + metrics_file)
         os.system("rm " + metrics_concat_file)
         os.system("rm " + file_ascii)
-        i += 1
 
-    os.system("rm " + filetmp_i)
-    return all_metric_filetmp
+    return all_metric_filetmp, single_metric_filetmp
 
 
 def usage(value):
@@ -992,16 +1170,18 @@ Usage:   neo4j_health [ optional args ]
 Purpose: Report and plot various statistics about the database/cluster as well as its current state
 
 Inputs:  
-	[ -i | --interval    ]  <S|Min|H|D|W|Y> 
-	[ -p | --periods     ]  <nn>
-	[ -s | --startdate   ]  <yyyy-mm-dd>
-	[ -e | --enddate     ]  <yyyy-mm-dd>
-	[ -l | --checkdb     ]  <True|False>
-	[ -v | --verbose     ]  
-	[ -m | --metric      ]  <"transaction"|"page_cache"|"bolt"|"causal_clustering"|
-				"cypher"|"check_point"|"object"|"network"|"server"|
-				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
-				"all"|"none">
+	[ -i | --interval              ]  <S|Min|H|D|W|Y> 
+	[ -p | --periods               ]  <nn>
+	[ -s | --startdate             ]  <yyyy-mm-dd HH:MM:SS>
+	[ -e | --enddate               ]  <yyyy-mm-dd HH:MM:SS>
+	[ -c | --checkdb               ]  <True|False>
+	[ -d | --display_precision     ]  
+	[ -b | --bolt_port             ]  
+	[ -v | --verbose               ]  
+	[ -m | --metric                ]  <"transaction"|"page_cache"|"bolt"|"causal_clustering"|
+				           "cypher"|"check_point"|"object"|"network"|"server"|
+				           "jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
+				           "all"|"none">
 
 	o:  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 	o:  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
@@ -1012,6 +1192,11 @@ Inputs:
 
                Examples:
                =========
+
+
+               -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours
+	
                --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
                     # Report on ten individual days, starting on 2019-01-01
 
@@ -1122,7 +1307,9 @@ def main(argv):
     global process_metrics
     global bolt_port
     global checkdb
+    global display_precision
     global verbose
+    global bolt_port
     global metrics_csv_interval
 
     start_date = None
@@ -1130,22 +1317,22 @@ def main(argv):
     interval = "X"
     periods = None
     options=True
-    checkdb=None
+    checkdb=False
+    display_precision=False
     metric_category = 'all'
     output_filename = "neo4j_health.out"
 
     try:
-        opts, args = getopt.getopt(sys.argv[1:], 'h:i:p:s:e:m:o:c:v', [
-            'interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'checkdb=', 'verbose', 'help='])
+        opts, args = getopt.getopt(sys.argv[1:], 'i:b:p:s:e:m:o:cvdh', [
+            'interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
 
     except getopt.GetoptError:
         usage('')
-        sys.exit(2)
     else:
         for opt, arg in opts:
-            if opt in ('-h', '-help'):
-                usage()
-                sys.exit()
+            if opt in ('-h', '--help'):
+                usage(0)
+                exit()
             if opt in ('-i', '-interval'):
                 interval = arg
                 if interval not in ("S","Min","H", "D", "W", "Y"):
@@ -1182,7 +1369,11 @@ def main(argv):
             elif opt in ('-v', '--verbose'):
                 verbose = True
             elif opt in ('-c', '--checkdb'):
-                checkdb = arg
+                checkdb=True
+            elif opt in ('-d', '--display_precision'):
+                display_precision=True
+            elif opt in ('-b','--bolt_port'):
+                bolt_port=arg
             elif opt in ('--port'):
                 bolt_port = arg
             elif opt in ('-o', '--outfile'):
@@ -1247,7 +1438,7 @@ def main(argv):
         else:
             os.system("touch " + csv_filename )
 
-        for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation"):
+        for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
 
             get_stats(start_date, end_date, metric_type,
                       interval, periods, options)
