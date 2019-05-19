@@ -77,6 +77,14 @@ def run_shell(shell_in,section_title):
     print ("")
     #print ("###################################################################")
 
+def check_size():
+
+    run_shell("df -H -P -l ","Disk Utilization")
+    db('call apoc.monitor.store();',"Neo4j Store Size")
+    run_shell("grep 'Total size' " + neo4j_home + "/logs/debug.log","Database/Index Size History")
+    run_shell("du -h -d1 " + neo4j_home +   "/data/databases/graph.db" ,"Database Size")
+    run_shell("du -h -d1 " + neo4j_home +   "/data/databases/graph.db/*tran*" ,"Transaction Logs")
+
 
 def host_db_check():
 
@@ -85,7 +93,9 @@ def host_db_check():
     run_shell(
         "echo Uptime: `uptime | awk ' BEGIN { FS = \"up \" } { print $2}' | awk ' BEGIN { FS = \",\" } { print $1 $2 }'` ","")
 
-    run_shell("df -H -P -l ","Disk Utilization")
+    db('call apoc.monitor.kernel();',"Neo4j Kernel")
+
+    check_size()
 
     run_shell("top -n 5 -l 1 ","Processes")
 
@@ -100,22 +110,44 @@ def host_db_check():
         run_shell(" grep -i 'INFO' " + neo4j_home + "/logs/query.log | sort -k4nr,4  | cut -c1-280 | head -5  ","Neo4j Top 5 Slowest Queries")
 
         run_shell(" grep -i 'Detected VM stop-the-world pause' " +
-              neo4j_home + "/logs/debug.log | sort -k10 -r | head -5 ","Neo4j Top 5 Longest GC pauses(>= 3.4)")
+              neo4j_home + "/logs/debug.log | sort -k10 -r | head -5 ","Neo4j Top 5 Longest GC pauses(3.4+)")
 
         run_shell(" grep -n -i blocked " + neo4j_home +
-              "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 5 Longest GC pauses (< 3.4+) ")
+              "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 5 Longest GC pauses (< 3.4) ")
 
         db('call apoc.meta.stats() yield nodeCount as n, relCount as r with  n, r with (2.0*r/((n-1)*n)) as value return round(100 * value)/100;',"Neo4j Node Density ")
 
-        db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId;', "Neo4j Active Long Running Queries ( > 60s )")
-
         db('call dbms.listQueries();',"Neo4j Active Queries ")
 
+        db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId;', "Neo4j Active Long Running Queries ( > 60s )")
+
+
         run_shell("grep -v '^#\' " + neo4j_home + "/conf/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings")
+
+        run_shell( neo4j_home + "/bin/neo4j-admin memrec ","Recommended Memory Settings")
 
     os.system("grep -i 'dbms.mode' /tmp/file.out > /tmp/neo4j.tmp")
     config = ConfigObj('/tmp/neo4j.tmp')
     dbms_mode=config.get('dbms.mode') 
+    dbms_pagecache=config.get('dbms.memory.pagecache.size') 
+    dbms_heap_max=config.get('dbms.memory.heap.max_size')
+    dbms_heap_init=config.get('dbms.memory.heap.init_size')
+    dbms_cc_pre_voting=config.get('causal_clustering.enable_pre_voting')
+
+    if neo4j_home is not None:
+       print(' ')
+       if dbms_pagecache is None:
+                 print("[WARNING]: dbms.memory.pagecache.size has not been explicitly defined" )
+       if dbms_heap_max is None:
+                 print("[WARNING]: dbms.memory.heap.max_size has not been explicitly defined" )
+       if dbms_heap_init is None:
+                 print("[WARNING]: dbms.memory.heap.init_size has not been explicitly defined" )
+       if dbms_mode=="CORE":
+           if dbms_cc_pre_voting is None:
+                 print("[WARNING]: dbms_causal_clustering.enable_pre_voting has not been enabled" )
+
+       print(' ')
+
 
     if neo4j_home is not None:
         if ((dbms_mode == "CORE") or (dbms_mode == "READ_REPLICA")):
@@ -127,8 +159,6 @@ def host_db_check():
         db('call apoc.monitor.tx();',"Neo4j Transaction")
         db('call apoc.monitor.locks(100);',"Neo4j Locks")
 
-        db('call apoc.monitor.kernel();',"Neo4j Kernel")
-        db('call apoc.monitor.store();',"Neo4j Store Size")
 
     print ("###################################################################")
 
@@ -138,8 +168,6 @@ def host_db_check():
     #print ("")
 
 def print_dataframe(df):
-    print('---------')
-    print(df)
     global display_precision
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 700)
@@ -148,7 +176,6 @@ def print_dataframe(df):
        pd.options.display.float_format = '{:,.1f}'.format
     else:
        pd.options.display.float_format = '{:,.0f}'.format
-    print('---------')
     print(df)
     print('')
     print('')
@@ -1174,7 +1201,7 @@ Inputs:
 	[ -p | --periods               ]  <nn>
 	[ -s | --startdate             ]  <yyyy-mm-dd HH:MM:SS>
 	[ -e | --enddate               ]  <yyyy-mm-dd HH:MM:SS>
-	[ -c | --checkdb               ]  <True|False>
+	[ -c | --checkdb               ]  
 	[ -d | --display_precision     ]  
 	[ -b | --bolt_port             ]  
 	[ -v | --verbose               ]  
@@ -1189,15 +1216,35 @@ Inputs:
 	o:  If no metric category is specified, it will report on "ALL" metrics
 	o:  To avoid running host/online-db  healthchecks, use "--checkdb=false"
 	o:  To avoid running historical metric reporint, use "--metric none"
+        o:  Additionally, --checkdb option will report on the following:
 
-               Examples:
+               Uptime
+               Neo4j Kernel
+               Database Restarts:
+               Disk Utilization
+               Neo4j Store Size
+               Database/Index Size History
+               Transaction Logs
+               Host Processes
+               vmstat
+               netstats
+               Neo4j Top 5 Slowest Queries
+               Neo4j Top 5 Longest GC pauses
+               Neo4j Node Density
+               Neo4j Active Queries
+               Neo4j Active Long Running Queries ( > 60s )
+               Neo4j Transactions
+               Neo4j Locks
+               Non-default Neo4j.conf settings
+               Recommended Configuration Settings
+
+         Examples:
                =========
 
-
-               -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+               -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d 
 	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours
 	
-               --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
+               --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction -b 7617 -c
                     # Report on ten individual days, starting on 2019-01-01
 
                --interval D   --periods 7  --startdate 2019-01-01  --metric all
@@ -1247,6 +1294,8 @@ tx.terminated_read-ps_Avg            1           1           1           1      
 tx.terminated_read-ps_Max          196         159         216         198         221
 tx.terminated_write-ps_Avg           0           1           1           1           1
 tx.terminated_write-ps_Max
+
+
 
 
 Dependencies:  
@@ -1396,6 +1445,8 @@ def main(argv):
 
     metrics_csv_interval=flag_server_restarts()
 
+    #verbose=True
+
     if verbose:
       print (" ")
       print (" ")
@@ -1419,14 +1470,10 @@ def main(argv):
       print ('METRICS_CSV_INTERVAL:', metrics_csv_interval)
       print (" ")
       print (" ")
-      print (" ")
-  
+
+
     if checkdb:
-        host_db_check()
-
-    if metric_category == 'none':
-        exit(0)
-
+      host_db_check()
 
     if metric_category == 'all':
         process_metrics = 'all'
