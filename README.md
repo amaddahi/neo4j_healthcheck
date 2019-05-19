@@ -28,8 +28,30 @@ Inputs:
 	o:  If no metric category is specified, it will report on "ALL" metrics
 	o:  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 	o:  To avoid running historical metric analysis, use "--metric none"
+	o:  Additionally, --checkdb option will report on the following:
 
-               Examples:
+               Uptime
+               Neo4j Kernel
+               Database Restarts:
+               Disk Utilization
+               Neo4j Store Size
+               Database/Index Size History
+               Transaction Logs
+               Host Processes
+               vmstat
+               netstats
+               Neo4j Top 5 Slowest Queries
+               Neo4j Top 5 Longest GC pauses
+               Neo4j Node Density
+               Neo4j Active Queries
+               Neo4j Active Long Running Queries ( > 60s )
+               Neo4j Transactions
+               Neo4j Locks
+               Non-default Neo4j.conf settings
+               Recommended Configuration Settings
+
+
+        Examples:
                =========
                --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
                     # Report on ten individual days, starting on 2019-01-01
