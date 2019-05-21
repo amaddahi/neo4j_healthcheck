@@ -12,7 +12,7 @@ Inputs:
 	[ -p | --periods               ]  < nn >
 	[ -s | --startdate             ]  < yyyy-mm-dd HH:MM:SS >
 	[ -e | --enddate               ]  < yyyy-mm-dd HH:MM:SS >
-	[ -c | --checkdb               ]  < True|False >
+	[ -c | --checkdb               ]  
 	[ -v | --verbose               ]
 	[ -d | --display_precision     ]
 	[ -b | --bolt_port             ]
