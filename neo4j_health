@@ -123,33 +123,11 @@ def host_db_check():
         db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId;', "Neo4j Active Long Running Queries ( > 60s )")
 
 
-        run_shell("grep -v '^#\' " + neo4j_home + "/conf/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings")
-
         run_shell( neo4j_home + "/bin/neo4j-admin memrec ","Recommended Memory Settings")
 
+        run_shell("grep -v '^#\' " + neo4j_home + "/conf/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings")
 
-
-    os.system("grep -i 'dbms.mode' /tmp/file.out > /tmp/neo4j.tmp")
-    config = ConfigObj('/tmp/neo4j.tmp')
-    dbms_mode=config.get('dbms.mode') 
-    dbms_pagecache=config.get('dbms.memory.pagecache.size') 
-    dbms_heap_max=config.get('dbms.memory.heap.max_size')
-    dbms_heap_init=config.get('dbms.memory.heap.init_size')
-    dbms_cc_pre_voting=config.get('causal_clustering.enable_pre_voting')
-
-    if neo4j_home is not None:
-       print(' ')
-       if dbms_pagecache is None:
-                 print("[WARNING]: dbms.memory.pagecache.size has not been explicitly defined" )
-       if dbms_heap_max is None:
-                 print("[WARNING]: dbms.memory.heap.max_size has not been explicitly defined" )
-       if dbms_heap_init is None:
-                 print("[WARNING]: dbms.memory.heap.init_size has not been explicitly defined" )
-       if dbms_mode=="CORE":
-           if dbms_cc_pre_voting is None:
-                 print("[WARNING]: dbms_causal_clustering.enable_pre_voting has not been enabled" )
-
-       print(' ')
+    get_config_recommendation()
 
 
     if neo4j_home is not None:
@@ -184,6 +162,44 @@ def print_dataframe(df):
     print(df)
     print('')
     print('')
+
+def get_config_recommendation():
+
+
+
+
+
+    if neo4j_home is not None:
+       config_file = '/tmp/file.out'
+       f = open(config_file, "r")
+       lines = f.readlines()
+       f.close()
+
+       config_on_list=[]
+       config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.init_size","causal_clustering.enable_pre_voting","dbms.backup.enabled"]
+
+       for cfg in config_list:
+          for line in lines:
+            if cfg in line:
+               config_on_list.append(cfg)
+
+       config_off_list = list(set(config_list) - set(list(config_on_list)))
+
+       os.system("grep 'dbms.mode' /tmp/file.out > /tmp/neo4j.tmp")
+       config = ConfigObj('/tmp/neo4j.tmp')
+       dbms_mode=config.get('dbms.mode') 
+
+       print(' ')
+       for item in sorted(config_off_list):
+                 print("[WARNING]:  Please set the following in neo4j.conf: (" + item + ")" )
+
+       if dbms_mode=="CORE":
+           if 'causal_clustering.enable_pre_voting' in config_off_list:
+                 print("[WARNING]:  Please set the following in neo4j.conf: (causal_clustering.enable_pre_voting)" )
+       print(' ')
+    return
+
+
 
 def get_errors():
 
@@ -690,6 +706,10 @@ def process_cumulative_timings(interval, df, df_org, metric_category):
             if metric_category == 'jvm_gc':
                 df["Total_GC_pause_time-ms"]= np.ceil(df['vm.gc.time.g1_young_generation'] +  df['vm.gc.time.g1_old_generation']).fillna(0).astype(int)
 
+            # Set negative diffs (due to restarts) to zero
+            #df[val_label][df[val_label] < 0] = 0
+            df[val_label][df[val_label] < 0] = 0
+
     df = df.dropna()
     #print(df[val_label] - df_org[val_label])
     return df
@@ -709,6 +729,8 @@ def process_cumulative_counters(interval, df, metric_category):
         # val_label = re.sub('metrics/','', x2)
         val_label = val_label + file[2]
 
+        # this is to address the warning when using df[val_label][df[val_label] < 0] = 0
+        pd.set_option('mode.chained_assignment', None)
 
         #add a counter for total 
         if file[1] == 1:  # obtain rate of change per second between two points in time
@@ -718,6 +740,7 @@ def process_cumulative_counters(interval, df, metric_category):
             #else:
 
                    df[val_label] = (df[val_label].diff()).fillna(0)
+                   df[val_label][df[val_label] < 0] = 0
 
                    #df[val_label] = (df[val_label].diff()/metrics_csv_interval).fillna(0)
                    #df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
@@ -729,9 +752,10 @@ def process_cumulative_counters(interval, df, metric_category):
                              df['vm.memory.pool.g1_eden_space-mb'] + 		\
                              df['vm.memory.pool.g1_old_gen-mb'] + 			\
                              df['vm.memory.pool.metaspace-mb']/(1024*1024)
- 
-            df[val_label]=df[val_label]/(1024*1024)
 
+            df[val_label]=df[val_label]/(1024*1024)
+            df[val_label][df[val_label] < 0] = 0
+         
     return df
 
 def normalize_stats(df, metric_category):
