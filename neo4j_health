@@ -55,6 +55,7 @@ def db(cypher,section_title):
 
 def run_shell(shell_in,section_title):
     file_tmp="/tmp/file.out"
+    #print(shell_in)
     shell=shell_in + " > " + file_tmp
     process = subprocess.Popen(shell, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     output = process.communicate()[0]
@@ -96,6 +97,9 @@ def host_db_check():
 
     db('call apoc.monitor.kernel();',"Neo4j Kernel")
 
+    if neo4j_home is not None:
+        run_shell("grep 'Operating System' " + neo4j_home + "/logs/debug.log | head -1","Host Operating System + Number of cpu cores")
+
     check_size()
 
     run_shell("top -n 5 -l 1 ","Processes")
@@ -108,13 +112,15 @@ def host_db_check():
     #run_shell("exec 2> /dev/null ; ps -ae --forest","Process Tree")
 
     if neo4j_home is not None:
-        run_shell(" grep -i 'INFO' " + neo4j_home + "/logs/query.log | sort -k4nr,4  | cut -c1-280 | head -5  ","Neo4j Top 5 Slowest Queries")
+        run_shell("cd " + neo4j_home + "/logs ; cat debug.log.7 debug.log.6 debug.log.5 debug.log.4 debug.log.3 debug.log.2 debug.log.1 debug.log | grep -i 'o.n.b.i.BackupImpl' " ,"Neo4j Backups")
+
+        run_shell(" grep -i 'INFO' " + neo4j_home + "/logs/query.log | sort -k4nr,4  | cut -c1-280 | head -10  ","Neo4j Top 10 Slowest Queries")
 
         run_shell(" grep -i 'Detected VM stop-the-world pause' " +
-              neo4j_home + "/logs/debug.log | sort -k10 -r | head -5 ","Neo4j Top 5 Longest GC pauses(3.4+)")
+              neo4j_home + "/logs/debug.log | sort -k10 -r | head -10 ","Neo4j Top 10 Longest GC pauses(3.4+)")
 
         run_shell(" grep -n -i blocked " + neo4j_home +
-              "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 5 Longest GC pauses (< 3.4) ")
+              "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 10 Longest GC pauses (< 3.4) ")
 
         db('call apoc.meta.stats() yield nodeCount as n, relCount as r with  n, r with (2.0*r/((n-1)*n)) as value return round(100 * value)/100;',"Neo4j Node Density ")
 
@@ -176,13 +182,16 @@ def get_config_recommendation():
        f.close()
 
        config_on_list=[]
-       config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.init_size","causal_clustering.enable_pre_voting","dbms.backup.enabled"]
+       #config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting","dbms.backup.enabled"]
+       config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting"]
 
        for cfg in config_list:
           for line in lines:
             if cfg in line:
                config_on_list.append(cfg)
+               print(config_on_list)
 
+       
        config_off_list = list(set(config_list) - set(list(config_on_list)))
 
        os.system("grep 'dbms.mode' /tmp/file.out > /tmp/neo4j.tmp")
@@ -191,14 +200,14 @@ def get_config_recommendation():
 
        print(' ')
        for item in sorted(config_off_list):
-                 print("[WARNING]:  Please set the following in neo4j.conf: (" + item + ")" )
+                 if "causal_clustering" not in item:
+                      print("[WARNING]:  Please set the following in neo4j.conf: (" + item + ")" )
 
        if dbms_mode=="CORE":
            if 'causal_clustering.enable_pre_voting' in config_off_list:
                  print("[WARNING]:  Please set the following in neo4j.conf: (causal_clustering.enable_pre_voting)" )
        print(' ')
     return
-
 
 
 def get_errors():
@@ -215,11 +224,26 @@ def get_errors():
         f = open(debug_file, "r")
         lines = f.readlines()
         f.close()
-    
+   
+        debug_filtered_file = neo4j_home + "/logs/filtered_debug.log"
+        f = open(debug_filtered_file, "w")
+
         for line in lines:
             for error in error_keep_list:
                 if (error in line) and ('Failed to load') not in line:
-                     print("----> " + line, end="")
+                     f.write("----> " + line)
+        f.close()
+
+        f = open(debug_filtered_file, "r")
+        lines = f.readlines()
+        f.close()
+
+        line_count=len(lines) 
+        i=0
+        for line in lines:
+              i=i+1
+              if i >= (line_count - 100 ):
+                   print(line , end = '')
                      
 def get_env():
 
@@ -659,6 +683,14 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
     print ('')
 
     if ( pd.Timestamp(start_date) > pd.Timestamp(end_date_max) ):
+         print(" ")
+         print(" ")
+         print ("Exiting:  Invalid Start Search Date(" +  str(pd.Timestamp(start_date)) + ") is outside of the Max range of available metrics(" + str(pd.Timestamp(end_date_max)) + ")" )
+         print(" ")
+         print(" ")
+         return 1
+
+    if ( pd.Timestamp(end_date) < pd.Timestamp(start_date_min) ):
          print(" ")
          print(" ")
          print ("Exiting:  Invalid Start Search Date(" +  str(pd.Timestamp(start_date)) + ") is outside of the Max range of available metrics(" + str(pd.Timestamp(end_date_max)) + ")" )
@@ -1277,8 +1309,8 @@ Inputs:
                Host Processes
                vmstat
                netstats
-               Neo4j Top 5 Slowest Queries
-               Neo4j Top 5 Longest GC pauses
+               Neo4j Top 10 Slowest Queries
+               Neo4j Top 10 Longest GC pauses
                Neo4j Node Density
                Neo4j Active Queries
                Neo4j Active Long Running Queries ( > 60s )
@@ -1481,7 +1513,7 @@ def main(argv):
                 print("Incorrect parameter:" + arg)
 
         if start_date != None and end_date != None:
-            if interval != "X" and periods != None:
+            if (interval != "X" and periods != None) or (interval == 'X' and periods != None) or (interval == 'X' and periods is None ) :
                 usage("dates")
                 exit(1)
 
