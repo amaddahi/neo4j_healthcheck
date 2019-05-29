@@ -53,6 +53,10 @@ Inputs:
 
         Examples:
                =========
+	       
+	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
+		    
                --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
                     # Report on ten individual days, starting on 2019-01-01
 
@@ -70,8 +74,7 @@ Inputs:
 
                --interval Y -periods 2  --startdate 2018-01-01
 	       
-	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15'
-	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours
+	       
 
 Outputs:   Sample output ....
 
