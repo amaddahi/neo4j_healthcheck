@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 5/13/2019
+# Last Update 06/04/2019
 
 
 from datetime import datetime
@@ -212,7 +212,7 @@ def get_config_recommendation():
 
 def get_errors():
 
-        error_keep_list=["Caused by","o.n.c.c.c.RaftMachine", "o.n.c.c.c.s.RaftState","o.n.c.c.c.s.RaftLogShipper","o.n.c.c.c.m.RaftMembershipChanger","o.n.c.c.c.m.RaftMembershipManager","o.n.c.m.RaftOutbound","o.n.k.i.c.MonitorGc","o.n.c.d.HazelcastCoreTopologyService","o.n.c.c.c.m.MembershipWaiterLifecycle","o.n.k.AvailabilityGuard","o.n.i.p.PageCache","o.n.c.i.ClusterBinder","o.n.k.i.DatabaseHealth","o.n.c.c.s.s.CoreStateDownloader","o.n.c.c.IdentityModule","GetOperation","ERROR","WARN","o.n.k.i.f.GraphDatabaseFacadeFactory"]
+        error_keep_list=["Deprecated index providers","Caused by","o.n.c.c.c.RaftMachine", "o.n.c.c.c.s.RaftState","o.n.c.c.c.s.RaftLogShipper","o.n.c.c.c.m.RaftMembershipChanger","o.n.c.c.c.m.RaftMembershipManager","o.n.c.m.RaftOutbound","o.n.k.i.c.MonitorGc","o.n.c.d.HazelcastCoreTopologyService","o.n.c.c.c.m.MembershipWaiterLifecycle","o.n.k.AvailabilityGuard","o.n.i.p.PageCache","o.n.c.i.ClusterBinder","o.n.k.i.DatabaseHealth","o.n.c.c.s.s.CoreStateDownloader","o.n.c.c.IdentityModule","GetOperation","ERROR","WARN","o.n.k.i.f.GraphDatabaseFacadeFactory"]
 
 
         print ("###################################################################")
@@ -361,6 +361,11 @@ def get_filenames(metric_category):
             ["neo4j.ids_in_use.relationship.csv", 0, ""],
             ["neo4j.ids_in_use.relationship_type.csv", 0, ""]
         ]
+    elif metric_category == 'transaction2':
+        filenames = [
+            ["neo4j.transaction.peak_concurrent.csv", 0, ""],
+            ["neo4j.transaction.active.csv", 0, "", 2]
+       ]
     elif metric_category == 'transaction':
         filenames = [
             ["neo4j.transaction.peak_concurrent.csv", 0, ""],
@@ -585,14 +590,14 @@ def pre_process_files(start_date, end_date, metric_category):
     #
     # Paste multiple csv files into a single file for the same metric category
     #
-    (filetmp,single_metric_filetmp) = merge_csv_files(filenames, metric_category)
+    (filetmp,check_point_duration_metric_filetmp) = merge_csv_files(filenames, metric_category)
 
     #
     # Read the merged file with epoch timestamp into a dataframe
     #
     df = pd.read_csv(filetmp)
-    if single_metric_filetmp:
-        df2 = pd.read_csv(single_metric_filetmp)
+    if check_point_duration_metric_filetmp:
+        df2 = pd.read_csv(check_point_duration_metric_filetmp)
 
     #df = pd.read_csv(filetmp, parse_dates=['date'], date_parser=lambda epoch: pd.to_datetime(epoch, unit='s'))
 
@@ -604,7 +609,7 @@ def pre_process_files(start_date, end_date, metric_category):
     # Change epoch to UTC timestamp
     #
     df = convert_epoch_to_timestamp(df, 'UTC')
-    if single_metric_filetmp:
+    if check_point_duration_metric_filetmp:
         df2 = convert_epoch_to_timestamp(df2, 'UTC')
 
     #df.to_csv(metric_category + "_1.csv")
@@ -613,24 +618,23 @@ def pre_process_files(start_date, end_date, metric_category):
     # drop any rows with null values - indicating mismatched enddates
     #
     df = df.dropna()
-    if single_metric_filetmp:
+    if check_point_duration_metric_filetmp:
         df2 = df2.dropna()
 
     #df.to_csv(metric_category + "_2.csv")
 
-    #if single_metric_filetmp:
+    #if check_point_duration_metric_filetmp:
        #return df,df2
     #else: 
        #return df
 
     return df,df2
 
-def filter_date_range(start_date, end_date, df, interval, periods, options):
+def filter_date_range(start_date, end_date, df, interval, periods, options, check_point_duration):
 
     #
     # if no options are specified, gather stats for the last 24 hours with available data
     #
-
 
     start_date_min = df.date.min()
     end_date_max = df.date.max()
@@ -674,13 +678,14 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
             delta = str(periods)+"Y"
         end_date = pd.Timestamp(start_date) + pd.to_timedelta(delta)
 
-    print ('min_startdate:           ', pd.Timestamp(start_date_min))
-    print ('max_enddate:             ', pd.Timestamp(end_date_max))
-    print ('')
-    print ('search_startdate:        ', pd.Timestamp(start_date))
-    print ('search_enddate:          ', pd.Timestamp(end_date))
-    print ('')
-    print ('')
+    if not check_point_duration:
+          print ('min_startdate:           ', pd.Timestamp(start_date_min))
+          print ('max_enddate:             ', pd.Timestamp(end_date_max))
+          print ('')
+          print ('search_startdate:        ', pd.Timestamp(start_date))
+          print ('search_enddate:          ', pd.Timestamp(end_date))
+          print ('')
+          print ('')
 
     if ( pd.Timestamp(start_date) > pd.Timestamp(end_date_max) ):
          print(" ")
@@ -714,7 +719,6 @@ def filter_date_range(start_date, end_date, df, interval, periods, options):
 def process_cumulative_timings(interval, df, df_org, metric_category):
 
     #print(list(df))
-    df_org = df_org.dropna()
 
     filenames = get_filenames(metric_category)
 
@@ -739,11 +743,9 @@ def process_cumulative_timings(interval, df, df_org, metric_category):
                 df["Total_GC_pause_time-ms"]= np.ceil(df['vm.gc.time.g1_young_generation'] +  df['vm.gc.time.g1_old_generation']).fillna(0).astype(int)
 
             # Set negative diffs (due to restarts) to zero
-            #df[val_label][df[val_label] < 0] = 0
             df[val_label][df[val_label] < 0] = 0
 
     df = df.dropna()
-    #print(df[val_label] - df_org[val_label])
     return df
 
 
@@ -771,12 +773,12 @@ def process_cumulative_counters(interval, df, metric_category):
                    #df[val_label] = df[val_label].diff().fillna(0)
             #else:
 
-                   df[val_label] = (df[val_label].diff()).fillna(0)
-                   df[val_label][df[val_label] < 0] = 0
-
-                   #df[val_label] = (df[val_label].diff()/metrics_csv_interval).fillna(0)
+                   #df[val_label] = (df[val_label].diff()).fillna(0)
+                   df[val_label] = (df[val_label].diff()/metrics_csv_interval).fillna(0)
                    #df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
                    #df[val_label] = np.ceil(df[val_label].diff()).fillna(0).astype(int)
+
+                   df[val_label][df[val_label] < 0] = 0
 
         elif ((file[1] == 0) and ( metric_category == 'jvm_memory' )):
             df["heap_size-mb"]= df['vm.memory.pool.code_cache-mb'] +  		\
@@ -808,14 +810,14 @@ def normalize_stats(df, metric_category):
     return df
 
 def apply_output_projection(df,metric_category):
-
+        
         column_names = list(df)
         #print (column_names)
 
         if metric_category == 'check_point':
             output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
         elif metric_category == 'causal_clustering':
-            output_keep_list = ['cc.catchup.tx_pull_requests_received_Sum', 'cc.catchup.tx_pull_requests_received_Avg', 'cc.catchup.tx_pull_requests_received_Max' , 'cc.core.append_index_Sum', 'cc.core.append_index_Avg', 'cc.core.append_index_Max', 'cc.core.commit_index_Sum', 'cc.core.commit_index_Avg', 'cc.core.commit_index_Max', 'cc.core.in_flight_cache.element_count_Sum', 'cc.core.in_flight_cache.element_count_Avg', 'cc.core.in_flight_cache.element_count_Max', 'cc.core.in_flight_cache.hits_Sum', 'cc.core.in_flight_cache.hits_Avg', 'cc.core.in_flight_cache.hits_Max', 'cc.core.in_flight_cache.max_bytes_Sum', 'cc.core.in_flight_cache.max_bytes_Avg', 'cc.core.in_flight_cache.max_bytes_Max', 'cc.core.in_flight_cache.max_elements_Sum', 'cc.core.in_flight_cache.max_elements_Avg', 'cc.core.in_flight_cache.max_elements_Max' , 'cc.core.in_flight_cache.misses_Sum', 'cc.core.in_flight_cache.misses_Avg', 'cc.core.in_flight_cache.misses_Max', 'cc.core.in_flight_cache.total_bytes_Sum', 'cc.core.in_flight_cache.total_bytes_Avg', 'cc.core.in_flight_cache.total_bytes_Max', 'cc.core.is_leader_Sum', 'cc.core.is_leader_Avg', 'cc.core.is_leader_Max', 'cc.core.leader_not_found_Sum', 'cc.core.leader_not_found_Avg', 'cc.core.leader_not_found_Max', 'cc.core.message_processing_delay_Sum', 'cc.core.message_processing_delay_Avg', 'cc.core.message_processing_delay_Max', 'cc.core.message_processing_timer.append_entries_request_Sum', 'cc.core.message_processing_timer.append_entries_request_Avg', 'cc.core.message_processing_timer.append_entries_request_Max', 'cc.core.message_processing_timer.append_entries_response_Sum' , 'cc.core.message_processing_timer.append_entries_response_Avg', 'cc.core.message_processing_timer.append_entries_response_Max', 'cc.core.message_processing_timer_Sum'  , 'cc.core.message_processing_timer_Avg', 'cc.core.message_processing_timer_Max', 'cc.core.message_processing_timer.election_timeout_Sum', 'cc.core.message_processing_timer.election_timeout_Avg', 'cc.core.message_processing_timer.election_timeout_Max', 'cc.core.message_processing_timer.heartbeat_Sum', 'cc.core.message_processing_timer.heartbeat_Avg', 'cc.core.message_processing_timer.heartbeat_Max', 'cc.core.message_processing_timer.heartbeat_response_Sum', 'cc.core.message_processing_timer.heartbeat_response_Avg', 'cc.core.message_processing_timer.heartbeat_response_Max', 'cc.core.message_processing_timer.heartbeat_timeout_Sum', 'cc.core.message_processing_timer.heartbeat_timeout_Avg', 'cc.core.message_processing_timer.heartbeat_timeout_Max', 'cc.core.message_processing_timer.log_compaction_info_Sum', 'cc.core.message_processing_timer.log_compaction_info_Avg', 'cc.core.message_processing_timer.log_compaction_info_Max', 'cc.core.message_processing_timer.new_batch_request_Sum', 'cc.core.message_processing_timer.new_batch_request_Avg', 'cc.core.message_processing_timer.new_batch_request_Max', 'cc.core.message_processing_timer.new_entry_request_Sum', 'cc.core.message_processing_timer.new_entry_request_Avg', 'cc.core.message_processing_timer.new_entry_request_Max', 'cc.core.message_processing_timer.pre_vote_request_Sum', 'cc.core.message_processing_timer.pre_vote_request_Avg', 'cc.core.message_processing_timer.pre_vote_request_Max', 'cc.core.message_processing_timer.pre_vote_response_Sum', 'cc.core.message_processing_timer.pre_vote_response_Avg', 'cc.core.message_processing_timer.pre_vote_response_Max', 'cc.core.message_processing_timer.prune_request_Sum', 'cc.core.message_processing_timer.prune_request_Avg', 'cc.core.message_processing_timer.prune_request_Max', 'cc.core.message_processing_timer.vote_request_Sum', 'cc.core.message_processing_timer.vote_request_Avg', 'cc.core.message_processing_timer.vote_request_Max', 'cc.core.message_processing_timer.vote_response_Sum', 'cc.core.message_processing_timer.vote_response_Avg', 'cc.core.message_processing_timer.vote_response_Max', 'cc.core.replication_attempt_Sum', 'cc.core.replication_attempt_Avg', 'cc.core.replication_attempt_Max', 'cc.core.replication_fail_Sum', 'cc.core.replication_fail_Avg', 'cc.core.replication_fail_Max', 'cc.core.replication_new_Sum', 'cc.core.replication_new_Avg', 'cc.core.replication_new_Max', 'cc.core.replication_success_Sum', 'cc.core.replication_success_Avg', 'cc.core.replication_success_Max', 'cc.core.term_Sum', 'cc.core.term_Avg', 'cc.core.term_Max', 'cc.core.tx_retries_Sum', 'cc.core.tx_retries_Avg', 'cc.core.tx_retries_Max']
+            output_keep_list = ['cc.catchup.tx_pull_requests_received_Sum', 'cc.catchup.tx_pull_requests_received_Avg', 'cc.catchup.tx_pull_requests_received_Max' , 'cc.core.append_index_Sum', 'cc.core.append_index_Avg', 'cc.core.append_index_Max', 'cc.core.commit_index_Sum', 'cc.core.commit_index_Avg', 'cc.core.commit_index_Max', 'cc.core.in_flight_cache.element_count_Sum', 'cc.core.in_flight_cache.element_count_Avg', 'cc.core.in_flight_cache.element_count_Max', 'cc.core.in_flight_cache.hits_Sum', 'cc.core.in_flight_cache.hits_Avg', 'cc.core.in_flight_cache.hits_Max', 'cc.core.in_flight_cache.max_bytes_Sum', 'cc.core.in_flight_cache.max_bytes_Avg', 'cc.core.in_flight_cache.max_bytes_Max', 'cc.core.in_flight_cache.max_elements_Sum', 'cc.core.in_flight_cache.max_elements_Avg', 'cc.core.in_flight_cache.max_elements_Max' , 'cc.core.in_flight_cache.misses_Sum', 'cc.core.in_flight_cache.misses_Avg', 'cc.core.in_flight_cache.misses_Max', 'cc.core.in_flight_cache.total_bytes_Sum', 'cc.core.in_flight_cache.total_bytes_Avg', 'cc.core.in_flight_cache.total_bytes_Max', 'cc.core.is_leader_Sum', 'cc.core.is_leader_Avg', 'cc.core.is_leader_Max', 'cc.core.leader_not_found_Sum', 'cc.core.leader_not_found_Avg', 'cc.core.leader_not_found_Max', 'cc.core.message_processing_delay_Sum', 'cc.core.message_processing_delay_Avg', 'cc.core.message_processing_delay_Max', 'cc.core.message_processing_timer.append_entries_request_Sum', 'cc.core.message_processing_timer.append_entries_request_Avg', 'cc.core.message_processing_timer.append_entries_request_Max', 'cc.core.message_processing_timer.append_entries_response_Sum' , 'cc.core.message_processing_timer.append_entries_response_Avg', 'cc.core.message_processing_timer.append_entries_response_Max', 'cc.core.message_processing_timer_Sum'  , 'cc.core.message_processing_timer_Avg', 'cc.core.message_processing_timer_Max', 'cc.core.message_processing_timer.election_timeout_Sum', 'cc.core.message_processing_timer.election_timeout_Avg', 'cc.core.message_processing_timer.election_timeout_Max', 'cc.core.message_processing_timer.heartbeat_Sum', 'cc.core.message_processing_timer.heartbeat_Avg', 'cc.core.message_processing_timer.heartbeat_Max', 'cc.core.message_processing_timer.heartbeat_response_Sum', 'cc.core.message_processing_timer.heartbeat_response_Avg', 'cc.core.message_processing_timer.heartbeat_response_Max', 'cc.core.message_processing_timer.heartbeat_timeout_Sum', 'cc.core.message_processing_timer.heartbeat_timeout_Avg', 'cc.core.message_processing_timer.heartbeat_timeout_Max', 'cc.core.message_processing_timer.log_compaction_info_Sum', 'cc.core.message_processing_timer.log_compaction_info_Avg', 'cc.core.message_processing_timer.log_compaction_info_Max', 'cc.core.message_processing_timer.new_batch_request_Sum', 'cc.core.message_processing_timer.new_batch_request_Avg', 'cc.core.message_processing_timer.new_batch_request_Max', 'cc.core.message_processing_timer.new_entry_request_Sum', 'cc.core.message_processing_timer.new_entry_request_Avg', 'cc.core.message_processing_timer.new_entry_request_Max', 'cc.core.message_processing_timer.pre_vote_request_Sum', 'cc.core.message_processing_timer.pre_vote_response_Sum', 'cc.core.message_processing_timer.prune_request_Sum', 'cc.core.message_processing_timer.prune_request_Avg', 'cc.core.message_processing_timer.prune_request_Max', 'cc.core.message_processing_timer.vote_request_Sum', 'cc.core.message_processing_timer.vote_response_Sum', 'cc.core.replication_attempt_Sum', 'cc.core.replication_attempt_Avg', 'cc.core.replication_attempt_Max', 'cc.core.replication_fail_Sum', 'cc.core.replication_fail_Avg', 'cc.core.replication_fail_Max', 'cc.core.replication_new_Sum', 'cc.core.replication_new_Avg', 'cc.core.replication_new_Max', 'cc.core.replication_success_Sum', 'cc.core.replication_success_Avg', 'cc.core.replication_success_Max', 'cc.core.term_Sum', 'cc.core.term_Avg', 'cc.core.term_Max', 'cc.core.tx_retries_Sum', 'cc.core.tx_retries_Avg', 'cc.core.tx_retries_Max']
         elif metric_category == 'cypher':
             output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
         elif metric_category == 'server':
@@ -840,9 +842,9 @@ def apply_output_projection(df,metric_category):
             output_keep_list = ['blt.accumulated_processing_time_Sum', 'blt.accumulated_processing_time_Avg', 'blt.accumulated_processing_time_Max', 'blt.accumulated_queue_time_Sum',  'blt.accumulated_queue_time_Avg', 'blt.accumulated_queue_time_Max', 'blt.messages_done-ps_Sum', 'blt.messages_done-ps_Avg', 'blt.messages_done-ps_Max', 'blt.messages_received-ps_Sum', 'blt.messages_received-ps_Avg', 'blt.messages_received-ps_Max', 'blt.messages_failed-ps_Sum', 'blt.messages_failed-ps_Avg', 'blt.messages_failed-ps_Max', 'blt.messages_started-ps_Sum', 'blt.messages_started-ps_Avg', 'blt.messages_started-ps_Max', 'blt.connections_closed-ps_Sum', 'blt.connections_closed-ps_Avg', 'blt.connections_closed-ps_Max', 'blt.connections_opened-ps_Sum', 'blt.connections_opened-ps_Avg', 'blt.connections_opened-ps_Max', 'blt.connections_running-ps_Avg', 'blt.connections_running-ps_Max', 'blt.connections_idle-ps_Avg', 'blt.connections_idle-ps_Max', 'blt.sessions_started-ps_Sum', 'blt.sessions_started-ps_Avg', 'blt.sessions_started-ps_Max']
 
         output_delete_list = list(set(column_names) - set(output_keep_list))
+
         df_output = df.drop(output_delete_list, 1, errors='ignore')
-        #print(df_output)
-     
+    
         for label in list(df_output):
             #print (label)  
             pattern_sum='-ps_Sum'
@@ -873,7 +875,8 @@ def apply_output_projection(df,metric_category):
                      df_output.rename(columns={label:label.replace(pattern_cc_core,'cc')}, inplace=True)
             
             #print (label + "   " + label.replace(pattern_max,'_Max'))
-                
+               
+
         return df_output
 
 
@@ -897,7 +900,7 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     print (" ")
     (df,df2) = pre_process_files(start_date, end_date, metric_category)
 
-    #df.to_csv(metric_category + "1.csv")
+    #df.to_csv(metric_category + "11.csv")
     #df2.to_csv(metric_category + "12.csv")
 
     # can this be moved to main?
@@ -905,9 +908,10 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     if start_date == None and end_date == None:
         aggr_interval = "H"
 
-    df = filter_date_range(start_date, end_date, df, interval, periods, options)
+    df = filter_date_range(start_date, end_date, df, interval, periods, options,False)
     if isinstance(df2 , pd.DataFrame):
-        df2 = filter_date_range(start_date, end_date, df2, interval, periods, options)
+        check_point_duration=True
+        df2 = filter_date_range(start_date, end_date, df2, interval, periods, options,check_point_duration)
 
     if not isinstance(df, pd.DataFrame):
         if df==1:
@@ -915,16 +919,16 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
 
     df_org=df
 
-    #df.to_csv(metric_category + "filtered_date_2.csv")
+    #df.to_csv(metric_category + "_df_filtered_date_2.csv")
     # print_dataframe(df.tail(5))
 
     df = process_cumulative_counters(interval, df, metric_category)
 
-    #df.to_csv(metric_category + "_cumu_cntr_3.csv")
+    #df.to_csv(metric_category + "_df_cumu_cntr_3.csv")
 
     df = process_cumulative_timings(interval, df, df_org, metric_category)
 
-    #df.to_csv(metric_category + "cumu_time_4.csv")
+    #df.to_csv(metric_category + "_df_cumu_time_4.csv")
 
     if options is False:
         interval = "H"
@@ -932,16 +936,14 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     df = df.replace([np.inf, -np.inf], np.nan)
 
     #print_dataframe(df.head(5))
-    # print(df.index.tolist())
+    #print(df.index.tolist())
 
     #df = np.ceil(df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
     df = (df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
 
     #print_dataframe(df.tail(15).T)
     if isinstance(df2 , pd.DataFrame):
-          #df2 = np.ceil(df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
           df2 = (df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
-          #df2 = np.ceil(df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
 
     
     #df.to_csv(metric_category + "avg-max-5.csv")
@@ -961,11 +963,11 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     if interval in ('S','Min'):
        df=df[(df.sum(axis=1) != 0)]       
 
-    # if check_point then df = df_results
+    #print (df.T)
 
+    # only applies to check_point duration 
     if isinstance(df2 , pd.DataFrame):
         df = df.merge(df2,how='left', left_on='date', right_on='date')
-
 
     df = apply_output_projection(df,metric_category)
 
@@ -1026,9 +1028,9 @@ def get_plot_group(metric_category):
         ]
     elif metric_category == 'check_point':
         plot_group = [
-            ["duration"],
-            ["events"],
-            ["total_time"]
+            ["duration","ckp.total_time_Sum"],
+            ["total_time"],
+            ["events"]
         ]
     elif metric_category == 'jvm_thread':
         plot_group = [
@@ -1057,7 +1059,7 @@ def get_plot_group(metric_category):
         plot_group = [
             ["election_timeout"],
             ["pre_vote"],
-            ["vote_request","vote_response"],
+            [".vote_request",".vote_response"],
             ["heartbeat"],
             ["catchup"],
             ["prune_request"],
@@ -1195,22 +1197,18 @@ def get_metric_category_abbr(file_type):
 
 
 def merge_csv_files(filenames, metric_category):
-    single_metric_filetmp=False
+    check_point_duration_metric_filetmp=False
     all_metric_filetmp = metric_category + ".all_metrics_epoch"
     i = 1
 
     inspect_file_start(metric_category)
-    #exit(0)
 
     for file in filenames:
        
-
- 
         filetmp_x = working_directory + "/filetmp_x"
         filetmp_i = working_directory + "/filetmp_i"
         metrics_file = metrics_directory + "/" + file[0] + ".final"
         metrics_concat_file = working_directory + "/" + file[0] + ".cat"
-
 
         file_type = file[0].split('.')[1]
 
@@ -1253,6 +1251,14 @@ def merge_csv_files(filenames, metric_category):
         os.system(cmd)
 
 
+        #
+        # concat metric files column by column for each metric category
+        #
+        # 0 = Non-cumulative event counter
+        # 1 = Cumulative event counter
+        # 2 = Cumulative Time event counter(ms)
+        # 3 = special case for handling check_point_duration_time as it is logged only when checkpoint occurs (i.e. every 15 minutes or every 100K transactions - depending on the configuration) and not every 3 seconds(default for csv_metric_interval)
+
         if file[1] != 3:
             if i == 1:
                 os.system("cp " + metrics_file + " " + all_metric_filetmp)
@@ -1262,12 +1268,12 @@ def merge_csv_files(filenames, metric_category):
             os.system("rm " + metrics_file)
             i += 1
         else:
-            single_metric_filetmp=metrics_file
+            check_point_duration_metric_filetmp=metrics_file
 
         os.system("rm " + metrics_concat_file)
         os.system("rm " + file_ascii)
 
-    return all_metric_filetmp, single_metric_filetmp
+    return all_metric_filetmp, check_point_duration_metric_filetmp
 
 
 def usage(value):
