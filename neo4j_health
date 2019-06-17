@@ -894,6 +894,10 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
                msg = msg + "  --> Collected for HA clusters only"
                print(msg)
                return
+    elif metric_category == 'causal_clustering':
+       if not os.path.exists(metrics_directory + '*causal_clustering*'):
+               dbms_mode='CORE'
+               return
     else:
        print(msg)
            
