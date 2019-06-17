@@ -887,9 +887,10 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     print (" ")
     msg= "Summarizing Stats:  " + metric_category
 
+    # TODO
     if metric_category == 'network':
-       for file in os.listdir(metrics_directory):
-           if fnmatch.fnmatch(file, "*causal_clustering*"):
+       #for file in os.listdir(metrics_directory):
+           #if fnmatch.fnmatch(file, "*causal_clustering*"):
                msg = msg + "  --> Collected for HA clusters only"
                print(msg)
                return
