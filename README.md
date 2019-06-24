@@ -177,5 +177,15 @@ Instructions to run the script:
 	   look for the metrics directory in the current working directory, and if not found, it will then look under the
 	   directory specified by NEO4j_HOME.
 	   
+To Run in Docker:
+
+         $docker build -t neo4j_health:latest -f Dockerfile .
+         $docker run     \
+	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
+	 -v $NEO4J_HOME/metrics:/app/metrics  \
+	 -v $NEO4J_HOME/logs:/app/logs \
+	 -v $NEO4J_HOME/conf:/app/conf     \
+	 neo4j_health:latest \
+	 -m page_cache -p 3 -i Min -c -b 7617 -v
 </pre>
 
