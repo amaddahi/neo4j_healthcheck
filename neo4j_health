@@ -25,14 +25,20 @@ from configobj import ConfigObj
 version = '2.0'
 verbose = False
 
+#host_ip = "72.211.24.138"
+#host_ip = "192.168.65.2"
+host_ip = "localhost"
 db_user = None
 db_pwd = None
 neo4j_home = None
 working_directory = None
 metrics_directory = None
+logs_directory = None
+conf_directory = None
+data_directory = None
 results_directory = None
+docker = None
 #metrics_csv_interval = 3  # seconds
-empty_metrics_directory= False
 all_csv_filename = "neo4j_health.csv"
 process_metrics = None
 dbms_mode = None
@@ -48,17 +54,20 @@ def run_benchmark():
 
 
 def db(cypher,section_title):
-       cmd = " echo ' " + cypher + " ' | " + neo4j_home + "/bin/cypher-shell --encryption=false " + \
-           " -u " + db_user + " -p " + db_pwd + " --format verbose -a localhost:" + str(bolt_port) + " | egrep -v 'row available|rows available' "
+       global host_ip
+       cypher_shell=bin_directory + "/cypher-shell"
+       cmd = " echo ' " + cypher + " ' | " + cypher_shell + " --encryption=false " + \
+            " -u " + db_user + " -p " + db_pwd + " --format verbose -a " + host_ip + ":" + str(bolt_port) + " | egrep -v 'row available|rows available' "
+            #" -u " + db_user + " -p " + db_pwd + " --format verbose -a " + host_ip + ":" + str(bolt_port) + " | egrep -v 'row available|rows available' "
        #print(cmd)
-       run_shell(cmd,section_title)
+       run_shell(cmd,section_title,1)
 
-def run_shell(shell_in,section_title):
+def run_shell(shell_in,section_title,report_error):
     file_tmp="/tmp/file.out"
     #print(shell_in)
     shell=shell_in + " > " + file_tmp
     process = subprocess.Popen(shell, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    output = process.communicate()[0]
+    output , error  = process.communicate()
     exit_code = process.returncode
     
     print ("###################################################################")
@@ -70,57 +79,67 @@ def run_shell(shell_in,section_title):
         file = open(file_tmp, 'r') 
         print (file.read() )
         file.close() 
-    #else:
-        #print("ERROR: " + shell_in)
-        #raise error(shell, exit_code, output)
-        #raise Exception(shell, output)
+    else:
+        if report_error == 1: 
+            if '60000' not in shell_in:
+                print("ERROR: " + shell_in)
+                print(error)
+                #raise Exception(shell, output)
+                #exit(0)
 
     print ("")
     #print ("###################################################################")
 
 def check_size():
 
-    run_shell("df -H -P -l ","Disk Utilization")
+    global logs_directory
+    global data_directory
+
+    run_shell("df -H -P -l ","Disk Utilization",1)
     db('call apoc.monitor.store();',"Neo4j Store Size")
-    run_shell("grep 'Total size' " + neo4j_home + "/logs/debug.log","Database/Index Size History")
-    run_shell("du -h -d1 " + neo4j_home +   "/data/databases/graph.db" ,"Database Size")
-    run_shell("du -h -d1 " + neo4j_home +   "/data/databases/graph.db/*tran*" ,"Transaction Logs")
+    run_shell("grep 'Total size' " + logs_directory + "/debug.log","Database/Index Size History",1)
+    run_shell("du -h -d1 " + data_directory +   "/databases/graph.db" ,"Database Size",1)
+    run_shell("du -h -d1 " + data_directory +   "/databases/graph.db/*tran*" ,"Transaction Logs",1)
 
 
 def host_db_check():
 
     global dbms_mode
+    global bin_directory
+    global logs_directory
+    global conf_directory
 
 
     run_shell(
-        "echo Uptime: `uptime | awk ' BEGIN { FS = \"up \" } { print $2}' | awk ' BEGIN { FS = \",\" } { print $1 $2 }'` ","")
+        "echo Uptime: `uptime | awk ' BEGIN { FS = \"up \" } { print $2}' | awk ' BEGIN { FS = \",\" } { print $1 $2 }'` ","",1)
 
     db('call apoc.monitor.kernel();',"Neo4j Kernel")
 
-    if neo4j_home is not None:
-        run_shell("grep 'Operating System' " + neo4j_home + "/logs/debug.log | head -1","Host Operating System + Number of cpu cores")
+    #if neo4j_home is not None:
+    if logs_directory is not None:
+        run_shell("grep 'Operating System' " + logs_directory + "/debug.log | head -1","Host Operating System + Number of cpu cores",1)
 
     check_size()
 
-    run_shell("top -n 5 -l 1 ","Processes")
+    run_shell("top -n 5 -l 1 ","Processes",1)
 
-    run_shell("exec 2> /dev/null ; vmstat -S k 1 10  ","vmstat")
+    run_shell("exec 2> /dev/null ; vmstat -S k 1 10  ","vmstat",1)
 
     run_shell(
-        "exec 2> /dev/null ; netstat -an | head -5 ; if [ $? != 0 ] ; then netstat -an | head -5; fi ","netstats")
+        "exec 2> /dev/null ; netstat -an | head -5 ; if [ $? != 0 ] ; then netstat -an | head -5; fi ","netstats",1)
 
-    #run_shell("exec 2> /dev/null ; ps -ae --forest","Process Tree")
+    #run_shell("exec 2> /dev/null ; ps -ae --forest","Process Tree",1)
 
-    if neo4j_home is not None:
-        run_shell("cd " + neo4j_home + "/logs ; cat debug.log.7 debug.log.6 debug.log.5 debug.log.4 debug.log.3 debug.log.2 debug.log.1 debug.log | grep -i 'o.n.b.i.BackupImpl' " ,"Neo4j Backups")
+    if logs_directory is not None:
+        run_shell("cd " + logs_directory + " ; cat debug.log.7 debug.log.6 debug.log.5 debug.log.4 debug.log.3 debug.log.2 debug.log.1 debug.log | grep -i 'o.n.b.i.BackupImpl' " ,"Neo4j Backups",0)
 
-        run_shell(" grep -i 'INFO' " + neo4j_home + "/logs/query.log | sort -k4nr,4  | cut -c1-280 | head -10  ","Neo4j Top 10 Slowest Queries")
+        run_shell(" grep -i 'INFO' " + logs_directory + "/query.log | sort -k4nr,4  | cut -c1-280 | head -10  ","Neo4j Top 10 Slowest Queries",1)
 
         run_shell(" grep -i 'Detected VM stop-the-world pause' " +
-              neo4j_home + "/logs/debug.log | sort -k10 -r | head -10 ","Neo4j Top 10 Longest GC pauses(3.4+)")
+              logs_directory + "/debug.log | sort -k10 -r | head -10 ","Neo4j Top 10 Longest GC pauses(3.4+)",1)
 
-        run_shell(" grep -n -i blocked " + neo4j_home +
-              "/logs/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 10 Longest GC pauses (< 3.4) ")
+        run_shell(" grep -n -i blocked " + logs_directory +
+              "/debug.log | sort -r -n -k 11 | head -10","Neo4j Top 10 Longest GC pauses (< 3.4) ",1)
 
         db('call apoc.meta.stats() yield nodeCount as n, relCount as r with  n, r with (2.0*r/((n-1)*n)) as value return round(100 * value)/100;',"Neo4j Node Density ")
 
@@ -128,15 +147,15 @@ def host_db_check():
 
         db('call dbms.listQueries() yield query, elapsedTimeMillis, queryId, username where elapsedTimeMillis > 60000  and NOT query contains toLower(\"LOAD\") with query, collect(queryId)  as q call dbms.killQueries(q) yield queryId return query, queryId;', "Neo4j Active Long Running Queries ( > 60s )")
 
+        run_shell( bin_directory + "/neo4j-admin memrec ","Recommended Memory Settings",1)
 
-        run_shell( neo4j_home + "/bin/neo4j-admin memrec ","Recommended Memory Settings")
-
-        run_shell("grep -v '^#\' " + neo4j_home + "/conf/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings")
+        run_shell("grep -v '^#\' " + conf_directory + "/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings",1)
 
     get_config_recommendation()
 
 
-    if neo4j_home is not None:
+    #if neo4j_home is not None:
+    if bin_directory is not None:
         if ((dbms_mode == "CORE") or (dbms_mode == "READ_REPLICA")):
            db('CALL dbms.cluster.role();',"Neo4j Causal Cluster Instance Role")
            db('CALL dbms.cluster.overview();',"Neo4j Causal Cluster Overview")
@@ -172,10 +191,7 @@ def print_dataframe(df):
 def get_config_recommendation():
 
 
-
-
-
-    if neo4j_home is not None:
+    if conf_directory is not None:
        config_file = '/tmp/file.out'
        f = open(config_file, "r")
        lines = f.readlines()
@@ -212,6 +228,8 @@ def get_config_recommendation():
 
 def get_errors():
 
+        global logs_directory
+        
         error_keep_list=["Deprecated index providers","Caused by","o.n.c.c.c.RaftMachine", "o.n.c.c.c.s.RaftState","o.n.c.c.c.s.RaftLogShipper","o.n.c.c.c.m.RaftMembershipChanger","o.n.c.c.c.m.RaftMembershipManager","o.n.c.m.RaftOutbound","o.n.k.i.c.MonitorGc","o.n.c.d.HazelcastCoreTopologyService","o.n.c.c.c.m.MembershipWaiterLifecycle","o.n.k.AvailabilityGuard","o.n.i.p.PageCache","o.n.c.i.ClusterBinder","o.n.k.i.DatabaseHealth","o.n.c.c.s.s.CoreStateDownloader","o.n.c.c.IdentityModule","GetOperation","ERROR","WARN","o.n.k.i.f.GraphDatabaseFacadeFactory"]
 
 
@@ -220,12 +238,12 @@ def get_errors():
         print ("Interesting Messages in Debug.log")
         print ("")
 
-        debug_file = neo4j_home + "/logs/debug.log"
+        debug_file = logs_directory + "/debug.log"
         f = open(debug_file, "r")
         lines = f.readlines()
         f.close()
    
-        debug_filtered_file = neo4j_home + "/logs/filtered_debug.log"
+        debug_filtered_file = logs_directory + "/filtered_debug.log"
         f = open(debug_filtered_file, "w")
 
         for line in lines:
@@ -252,38 +270,61 @@ def get_env():
     global neo4j_home
     global working_directory
     global metrics_directory
-    global empty_metrics_directory
+    global logs_directory
+    global conf_directory
+    global bin_directory
+    global data_directory
     global results_directory
 
-    db_user = os.environ.get("DB_USER")
-    db_pwd = os.environ.get("DB_PWD")
+    print(' ')
+    if checkdb:
+        if 'DB_USER' in os.environ:
+            db_user = os.environ.get("DB_USER")
+        else:
+            print('WARNING: cypher-shell username has not been exported.')
+            print(' ')
+
+        if 'DB_PWD' in os.environ:
+            db_pwd = os.environ.get("DB_PWD")
+        else:
+            print('WARNING: cypher-shell pwd has not been exported.')
+            print(' ')
 
     working_directory = os.getcwd()
     neo4j_home = os.environ.get('NEO4J_HOME')
-
+    metrics_directory = os.environ.get('METRICS_DIR')
+    logs_directory = os.environ.get('LOGS_DIR')
+    conf_directory = os.environ.get('CONF_DIR')
     results_directory=working_directory + "/metrics_plots"
 
     if not os.path.isdir(results_directory):
         os.makedirs(results_directory)
 
+    if not os.path.isdir('/proc/1/cgroup'):
+        docker=True
+
+    #if docker:
+       
     if neo4j_home:
-        dbms_directories_metrics = os.path.join(neo4j_home, 'metrics')
+        dbms_metrics_dir = os.path.join(neo4j_home, 'metrics')
+        dbms_logs_dir = os.path.join(neo4j_home, 'logs')
+        dbms_conf_dir = os.path.join(neo4j_home, 'conf')
+        dbms_bin_dir = os.path.join(neo4j_home, 'bin')
+        dbms_data_dir = os.path.join(neo4j_home, 'data')
 
     if os.path.isdir('metrics'):
         if fnmatch.filter(os.listdir('metrics'), '*.csv'):
             metrics_directory = os.path.join(working_directory, 'metrics')
         else:
-            empty_metrics_directory=True
             print("")
             print ("Exiting:  Can not find any CSV metrics files in the metrics directory in this folder")
             print("")
             exit(1)
     elif neo4j_home:
-        if os.path.isdir(dbms_directories_metrics):
-                if fnmatch.filter(os.listdir(dbms_directories_metrics), '*.csv'):
-                    metrics_directory = dbms_directories_metrics
+        if os.path.isdir(dbms_metrics_dir):
+                if fnmatch.filter(os.listdir(dbms_metrics_dir), '*.csv'):
+                    metrics_directory = dbms_metrics_dir
                 else:
-                    empty_metrics_directory=True
                     print("")
                     print("Exiting:  Can not find any CSV metrics files in " + metrics_directory )
                     print("")
@@ -296,8 +337,115 @@ def get_env():
         if os.getenv("NEO4J_HOME") is None:
               print ("NOTE         :  NEO4J_HOME has not been set!   ")
               print("")
-        exit(2)
+        exit(3)
 
+    if os.path.isdir('logs'):
+        if fnmatch.filter(os.listdir('logs'), 'debug.log'):
+            logs_directory = os.path.join(working_directory, 'logs')
+        else:
+            print("")
+            print ("Exiting:  Can not find any debug.log files in the logs directory in this folder")
+            print("")
+            exit(1)
+    elif neo4j_home:
+        if os.path.isdir(dbms_logs_dir):
+                if fnmatch.filter(os.listdir(dbms_logs_dir), 'debug.log'):
+                    logs_directory = dbms_logs_dir
+                else:
+                    print("")
+                    print("Exiting:  Can not find any debug.log files in " + logs_directory )
+                    print("")
+                    exit(1)
+    else:
+        print("")
+        print("")
+        print       ("Exiting      :  Can not find a logs directory in this directory nor under $NEO4J_HOME")
+        print("")
+        if os.getenv("NEO4J_HOME") is None:
+              print ("NOTE         :  NEO4J_HOME has not been set!   ")
+              print("")
+        exit(4)
+
+    if os.path.isdir('conf'):
+        if fnmatch.filter(os.listdir('conf'), 'neo4j.conf'):
+            conf_directory = os.path.join(working_directory, 'conf')
+        else:
+            print("")
+            print ("Exiting:  Can not find any neo4j.conf files in the conf directory in this folder")
+            print("")
+            exit(1)
+    elif neo4j_home:
+        if os.path.isdir(dbms_conf_dir):
+                if fnmatch.filter(os.listdir(dbms_conf_dir), 'neo4j.conf'):
+                    conf_directory = dbms_conf_dir
+                else:
+                    print("")
+                    print("Exiting:  Can not find any neo4j.conf files in " + conf_directory )
+                    print("")
+                    exit(1)
+    else:
+        print("")
+        print("")
+        print       ("Exiting      :  Can not find a conf directory in this directory nor under $NEO4J_HOME")
+        print("")
+        if os.getenv("NEO4J_HOME") is None:
+              print ("NOTE         :  NEO4J_HOME has not been set!   ")
+              print("")
+        exit(5)
+
+    if os.path.isdir('bin'):
+        if fnmatch.filter(os.listdir('bin'), 'neo4j'):
+            bin_directory = os.path.join(working_directory, 'bin')
+        else:
+            print("")
+            print ("Exiting:  Can not find any neo4j file in the bin directory in this folder")
+            print("")
+            exit(1)
+    elif neo4j_home:
+        if os.path.isdir(dbms_bin_dir):
+                if fnmatch.filter(os.listdir(dbms_bin_dir), 'neo4j'):
+                    bin_directory = dbms_bin_dir
+                else:
+                    print("")
+                    print("Exiting:  Can not find any neo4j files in " + bin_directory )
+                    print("")
+                    exit(1)
+    else:
+        print("")
+        print("")
+        print       ("Exiting      :  Can not find a bin directory in this directory nor under $NEO4J_HOME")
+        print("")
+        if os.getenv("NEO4J_HOME") is None:
+              print ("NOTE         :  NEO4J_HOME has not been set!   ")
+              print("")
+        exit(6)
+
+    if os.path.isdir('data'):
+        if fnmatch.filter(os.listdir('data'), 'databases'):
+            data_directory = os.path.join(working_directory, 'data')
+        else:
+            print("")
+            print ("Exiting:  Can not find data directory in this folder")
+            print("")
+            exit(1)
+    elif neo4j_home:
+        if os.path.isdir(dbms_data_dir):
+                if fnmatch.filter(os.listdir(dbms_data_dir), 'databases'):
+                    data_directory = dbms_data_dir
+                else:
+                    print("")
+                    print("Exiting:  Can not find any databases directory  in " + data_directory )
+                    print("")
+                    exit(1)
+    else:
+        print("")
+        print("")
+        print       ("Exiting      :  Can not find a databases directory in this directory nor under $NEO4J_HOME")
+        print("")
+        if os.getenv("NEO4J_HOME") is None:
+              print ("NOTE         :  NEO4J_HOME has not been set!   ")
+              print("")
+        exit(7)
 
 def get_filenames(metric_category):
     if metric_category == 'server':
@@ -1453,6 +1601,7 @@ def main(argv):
     global verbose
     global bolt_port
     global metrics_csv_interval
+    global host_ip
 
     start_date = None
     end_date = None
@@ -1466,7 +1615,7 @@ def main(argv):
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'i:b:p:s:e:m:o:cvdh', [
-            'interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
+            'host_ip=','interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
 
     except getopt.GetoptError:
         usage('')
@@ -1512,6 +1661,8 @@ def main(argv):
                 verbose = True
             elif opt in ('-c', '--checkdb'):
                 checkdb=True
+            elif opt in ('--host_ip'):
+                host_ip=arg
             elif opt in ('-d', '--display_precision'):
                 display_precision=True
             elif opt in ('-b','--bolt_port'):
@@ -1558,6 +1709,9 @@ def main(argv):
       print ('NEO4J_HOME          :', neo4j_home)
       print ('OUTPUT-DIR          :', working_directory)
       print ('METRIC-DIR          :', metrics_directory)
+      print ('LOGS-DIR            :', logs_directory)
+      print ('CONF-DIR            :', conf_directory)
+      print ('BIN-DIR             :', bin_directory)
       print ('BOLT-PORT           :', bolt_port)
       print ('DB-CHECK            :', checkdb)
       print ('METRICS_CSV_INTERVAL:', metrics_csv_interval)
