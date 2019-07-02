@@ -187,6 +187,7 @@ To Run in Docker:
 	 
          $docker run                                                   \
 	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
+	 -v /tmp/metrics_plots:/app/metrics_plots                      \
 	 -v $NEO4J_HOME/metrics:/app/metrics                           \
 	 -v $NEO4J_HOME/logs:/app/logs                                 \
 	 -v $NEO4J_HOME/conf:/app/conf                                 \
@@ -196,7 +197,16 @@ To Run in Docker:
 	 neo4j_health:latest                                           \
 	 -m page_cache -p 3 -i Min -c -b 7617 -v 
 	 
-	 # This example assumes the instance is running on host_ip address, with bolt port accessible via 7617
+	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
+	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
+	 non-default port.   Furthermore, the instance is running on host_ip address.
+	 
+	 docker run                                    \
+	 -v <DIRPATH>/metrics:/app/metrics             \
+	 -v <DIRPATH>/metrics_plots:/app/metrics_plots \
+	 neo4j_health:latest  -m cypher -v
+	 
+	 #The above example only generates report/plots for the provide metrics.
 	 
 </pre>
 
