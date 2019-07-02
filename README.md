@@ -196,5 +196,7 @@ To Run in Docker:
 	 neo4j_health:latest                                           \
 	 -m page_cache -p 3 -i Min -c -b 7617 -v 
 	 
+	 # This example assumes the instance is running on host_ip address, with bolt port accessible via 7617
+	 
 </pre>
 
