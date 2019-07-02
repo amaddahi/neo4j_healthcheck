@@ -8,6 +8,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 Inputs:
 <Min|H|D|W|Y>
 
+	[      --host_ip               ]
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
 	[ -s | --startdate             ]  < yyyy-mm-dd HH:MM:SS >
@@ -73,6 +74,7 @@ Inputs:
                     # Report on four one-week periods
 
                --interval Y -periods 2  --startdate 2018-01-01
+	    
 	       
 	       
 
@@ -180,12 +182,17 @@ Instructions to run the script:
 To Run in Docker:
 
          $docker build -t neo4j_health:latest -f Dockerfile .
-         $docker run     \
+	 
+         $docker run                                                   \
 	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
-	 -v $NEO4J_HOME/metrics:/app/metrics  \
-	 -v $NEO4J_HOME/logs:/app/logs \
-	 -v $NEO4J_HOME/conf:/app/conf     \
-	 neo4j_health:latest \
-	 -m page_cache -p 3 -i Min -c -b 7617 -v
+	 -v $NEO4J_HOME/metrics:/app/metrics                           \
+	 -v $NEO4J_HOME/logs:/app/logs                                 \
+	 -v $NEO4J_HOME/conf:/app/conf                                 \
+	 -v $NEO4J_HOME/bin:/app/bin                                   \
+	 -v $NEO4J_HOME/data:/app/data                                 \
+	 --host_ip=<NEO4J_INSTANCE_IP                                  \
+	 neo4j_health:latest                                           \
+	 -m page_cache -p 3 -i Min -c -b 7617 -v 
+	 
 </pre>
 
