@@ -128,7 +128,8 @@ Dependencies:
 Enabling cvs metrics:
 
 	o Set the following in neo4j.conf and restart the instance.
-	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   A 		value of zero will capture and log all successfully completed queries in the query.log file.
+	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   
+	  A value of zero will capture and log all successfully completed queries in the query.log file.
 	
 	dbms.logs.query.parameter_logging_enabled=true
 	dbms.logs.query.time_logging_enabled=true
@@ -174,10 +175,11 @@ Instructions to run the script:
 	1) Download the script
 	2) chmod +x neo4j_health
 	3) ensure the python along with its dependencies as outline above are installed
-	4) Run the script.   If [ -c | --checkdb ] option is optionally used, then ensure DB_USER, DB_PASSWD as well as      		NEO4J_HOME are also set.  The script does expect to run an analysis of stats in the metrics directory. As such, cvs
-	   metrics also needs to have been enabled and contain some data for proper analysis.  By default, the script will
-	   look for the metrics directory in the current working directory, and if not found, it will then look under the
-	   directory specified by NEO4j_HOME.
+	4) Run the script.   If [ -c | --checkdb ] option is optionally used, then ensure DB_USER, DB_PASSWD as well as
+	   NEO4J_HOME are also set.  The script does expect to run an analysis of stats in the metrics directory. 
+	   As such, cvs metrics also needs to have been enabled and contain some data for proper analysis.  
+	   By default, the script will look for the metrics directory in the current working directory, and if not found, 
+	   it will then look under the directory specified by NEO4j_HOME.
 	   
 To Run in Docker:
 
