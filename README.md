@@ -190,7 +190,7 @@ To Run in Docker:
 	 -v $NEO4J_HOME/conf:/app/conf                                 \
 	 -v $NEO4J_HOME/bin:/app/bin                                   \
 	 -v $NEO4J_HOME/data:/app/data                                 \
-	 --host_ip=<NEO4J_INSTANCE_IP                                  \
+	 --host_ip=< NEO4J_INSTANCE_IP >                               \
 	 neo4j_health:latest                                           \
 	 -m page_cache -p 3 -i Min -c -b 7617 -v 
 	 
