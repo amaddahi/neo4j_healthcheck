@@ -199,7 +199,8 @@ To Run in Docker:
 	 
 	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
 	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
-	 non-default port.   Furthermore, the instance is running on host_ip address.
+	 non-default port.   Furthermore, the instance is running on host_ip address(can be determined by executing: 
+	 `curl ifconfig.co`.
 	 
 	 docker run                                    \
 	 -v <DIRPATH>/metrics:/app/metrics             \
