@@ -34,6 +34,7 @@ neo4j_home = None
 working_directory = None
 metrics_directory = None
 logs_directory = None
+bin_directory = None
 conf_directory = None
 data_directory = None
 results_directory = None
@@ -339,114 +340,116 @@ def get_env():
               print("")
         exit(3)
 
-    if os.path.isdir('logs'):
-        if fnmatch.filter(os.listdir('logs'), 'debug.log'):
-            logs_directory = os.path.join(working_directory, 'logs')
+    if checkdb:
+
+        if os.path.isdir('logs'):
+            if fnmatch.filter(os.listdir('logs'), 'debug.log'):
+                logs_directory = os.path.join(working_directory, 'logs')
+            else:
+                print("")
+                print ("Exiting:  Can not find any debug.log files in the logs directory in this folder")
+                print("")
+                exit(1)
+        elif neo4j_home:
+            if os.path.isdir(dbms_logs_dir):
+                    if fnmatch.filter(os.listdir(dbms_logs_dir), 'debug.log'):
+                        logs_directory = dbms_logs_dir
+                    else:
+                        print("")
+                        print("Exiting:  Can not find any debug.log files in " + logs_directory )
+                        print("")
+                        exit(1)
         else:
             print("")
-            print ("Exiting:  Can not find any debug.log files in the logs directory in this folder")
             print("")
-            exit(1)
-    elif neo4j_home:
-        if os.path.isdir(dbms_logs_dir):
-                if fnmatch.filter(os.listdir(dbms_logs_dir), 'debug.log'):
-                    logs_directory = dbms_logs_dir
-                else:
-                    print("")
-                    print("Exiting:  Can not find any debug.log files in " + logs_directory )
-                    print("")
-                    exit(1)
-    else:
-        print("")
-        print("")
-        print       ("Exiting      :  Can not find a logs directory in this directory nor under $NEO4J_HOME")
-        print("")
-        if os.getenv("NEO4J_HOME") is None:
-              print ("NOTE         :  NEO4J_HOME has not been set!   ")
-              print("")
-        exit(4)
-
-    if os.path.isdir('conf'):
-        if fnmatch.filter(os.listdir('conf'), 'neo4j.conf'):
-            conf_directory = os.path.join(working_directory, 'conf')
+            print       ("Exiting      :  Can not find a logs directory in this directory nor under $NEO4J_HOME")
+            print("")
+            if os.getenv("NEO4J_HOME") is None:
+                  print ("NOTE         :  NEO4J_HOME has not been set!   ")
+                  print("")
+            exit(4)
+    
+        if os.path.isdir('conf'):
+            if fnmatch.filter(os.listdir('conf'), 'neo4j.conf'):
+                conf_directory = os.path.join(working_directory, 'conf')
+            else:
+                print("")
+                print ("Exiting:  Can not find any neo4j.conf files in the conf directory in this folder")
+                print("")
+                exit(1)
+        elif neo4j_home:
+            if os.path.isdir(dbms_conf_dir):
+                    if fnmatch.filter(os.listdir(dbms_conf_dir), 'neo4j.conf'):
+                        conf_directory = dbms_conf_dir
+                    else:
+                        print("")
+                        print("Exiting:  Can not find any neo4j.conf files in " + conf_directory )
+                        print("")
+                        exit(1)
         else:
             print("")
-            print ("Exiting:  Can not find any neo4j.conf files in the conf directory in this folder")
             print("")
-            exit(1)
-    elif neo4j_home:
-        if os.path.isdir(dbms_conf_dir):
-                if fnmatch.filter(os.listdir(dbms_conf_dir), 'neo4j.conf'):
-                    conf_directory = dbms_conf_dir
-                else:
-                    print("")
-                    print("Exiting:  Can not find any neo4j.conf files in " + conf_directory )
-                    print("")
-                    exit(1)
-    else:
-        print("")
-        print("")
-        print       ("Exiting      :  Can not find a conf directory in this directory nor under $NEO4J_HOME")
-        print("")
-        if os.getenv("NEO4J_HOME") is None:
-              print ("NOTE         :  NEO4J_HOME has not been set!   ")
-              print("")
-        exit(5)
-
-    if os.path.isdir('bin'):
-        if fnmatch.filter(os.listdir('bin'), 'neo4j'):
-            bin_directory = os.path.join(working_directory, 'bin')
+            print       ("Exiting      :  Can not find a conf directory in this directory nor under $NEO4J_HOME")
+            print("")
+            if os.getenv("NEO4J_HOME") is None:
+                  print ("NOTE         :  NEO4J_HOME has not been set!   ")
+                  print("")
+            exit(5)
+    
+        if os.path.isdir('bin'):
+            if fnmatch.filter(os.listdir('bin'), 'neo4j'):
+                bin_directory = os.path.join(working_directory, 'bin')
+            else:
+                print("")
+                print ("Exiting:  Can not find any neo4j file in the bin directory in this folder")
+                print("")
+                exit(1)
+        elif neo4j_home:
+            if os.path.isdir(dbms_bin_dir):
+                    if fnmatch.filter(os.listdir(dbms_bin_dir), 'neo4j'):
+                        bin_directory = dbms_bin_dir
+                    else:
+                        print("")
+                        print("Exiting:  Can not find any neo4j files in " + bin_directory )
+                        print("")
+                        exit(1)
         else:
             print("")
-            print ("Exiting:  Can not find any neo4j file in the bin directory in this folder")
             print("")
-            exit(1)
-    elif neo4j_home:
-        if os.path.isdir(dbms_bin_dir):
-                if fnmatch.filter(os.listdir(dbms_bin_dir), 'neo4j'):
-                    bin_directory = dbms_bin_dir
-                else:
-                    print("")
-                    print("Exiting:  Can not find any neo4j files in " + bin_directory )
-                    print("")
-                    exit(1)
-    else:
-        print("")
-        print("")
-        print       ("Exiting      :  Can not find a bin directory in this directory nor under $NEO4J_HOME")
-        print("")
-        if os.getenv("NEO4J_HOME") is None:
-              print ("NOTE         :  NEO4J_HOME has not been set!   ")
-              print("")
-        exit(6)
-
-    if os.path.isdir('data'):
-        if fnmatch.filter(os.listdir('data'), 'databases'):
-            data_directory = os.path.join(working_directory, 'data')
+            print       ("Exiting      :  Can not find a bin directory in this directory nor under $NEO4J_HOME")
+            print("")
+            if os.getenv("NEO4J_HOME") is None:
+                  print ("NOTE         :  NEO4J_HOME has not been set!   ")
+                  print("")
+            exit(6)
+    
+        if os.path.isdir('data'):
+            if fnmatch.filter(os.listdir('data'), 'databases'):
+                data_directory = os.path.join(working_directory, 'data')
+            else:
+                print("")
+                print ("Exiting:  Can not find data directory in this folder")
+                print("")
+                exit(1)
+        elif neo4j_home:
+            if os.path.isdir(dbms_data_dir):
+                    if fnmatch.filter(os.listdir(dbms_data_dir), 'databases'):
+                        data_directory = dbms_data_dir
+                    else:
+                        print("")
+                        print("Exiting:  Can not find any databases directory  in " + data_directory )
+                        print("")
+                        exit(1)
         else:
             print("")
-            print ("Exiting:  Can not find data directory in this folder")
             print("")
-            exit(1)
-    elif neo4j_home:
-        if os.path.isdir(dbms_data_dir):
-                if fnmatch.filter(os.listdir(dbms_data_dir), 'databases'):
-                    data_directory = dbms_data_dir
-                else:
-                    print("")
-                    print("Exiting:  Can not find any databases directory  in " + data_directory )
-                    print("")
-                    exit(1)
-    else:
-        print("")
-        print("")
-        print       ("Exiting      :  Can not find a databases directory in this directory nor under $NEO4J_HOME")
-        print("")
-        if os.getenv("NEO4J_HOME") is None:
-              print ("NOTE         :  NEO4J_HOME has not been set!   ")
-              print("")
-        exit(7)
-
+            print       ("Exiting      :  Can not find a databases directory in this directory nor under $NEO4J_HOME")
+            print("")
+            if os.getenv("NEO4J_HOME") is None:
+                  print ("NOTE         :  NEO4J_HOME has not been set!   ")
+                  print("")
+            exit(7)
+    
 def get_filenames(metric_category):
     if metric_category == 'server':
         filenames = [
@@ -1786,6 +1789,7 @@ def main(argv):
       print ('LOGS-DIR            :', logs_directory)
       print ('CONF-DIR            :', conf_directory)
       print ('BIN-DIR             :', bin_directory)
+      print ('RESULTS-DIR         :', results_directory)
       print ('BOLT-PORT           :', bolt_port)
       print ('DB-CHECK            :', checkdb)
       print ('METRICS_CSV_INTERVAL:', metrics_csv_interval)
