@@ -22,12 +22,14 @@ update-ca-certificates -f;
 ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64/
 RUN export JAVA_HOME
 
+#expose 7617
 
 # Copy the source code to app folder
-COPY ./neo4j_health.py /app/
+COPY ./neo4j_health /app/
 
 # Change the working directory
 WORKDIR /app/
 
 # Set "python" as the entry point
-ENTRYPOINT ["python3","./neo4j_health.py"]
+ENTRYPOINT ["python3","./neo4j_health"]
+#CMD echo "Hello world"
