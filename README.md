@@ -8,7 +8,6 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 ### Inputs:
 
 <Min|H|D|W|Y>
-
 	[      --host_ip               ]
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
@@ -126,7 +125,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	o ConfigObj  
 	o Matplotlib 
 	
-### Enabling cvs metrics:
+### Enabling CSV metrics:
 
 	o Set the following in neo4j.conf and restart the instance.
 	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   
