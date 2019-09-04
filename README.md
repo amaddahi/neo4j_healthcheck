@@ -6,7 +6,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
          Neo4j versions 3.3.x, 3.4.x and 3.5.x 
 
 #### Inputs:
-
+```
 	<Min|H|D|W|Y>
 	[      --host_ip               ]
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
@@ -30,7 +30,6 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 *  To avoid running historical metric analysis, use "--metric none"
 *  Additionally, --checkdb option will report on the following:
-
                Uptime
                Neo4j Kernel
                Database Restarts:
@@ -50,7 +49,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
                Neo4j Locks
                Non-default Neo4j.conf settings
                Recommended Configuration Settings
-
+```
 
         Examples:
                =========
