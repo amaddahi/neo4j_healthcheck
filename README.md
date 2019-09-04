@@ -1,4 +1,4 @@
-<pre>
+
 
 Usage:   neo4j_health [ optional args ]
 
@@ -82,7 +82,7 @@ Outputs:   Sample output ....
 
 $neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W
 
-
+<pre>
 date                        2019-01-06  2019-01-13  2019-01-20  2019-01-27  2019-02-03
 tx.peak_concurrent_Avg             239         239         239         239         239
 tx.peak_concurrent_Max             239         239         239         239         239
@@ -112,7 +112,7 @@ tx.terminated_read-ps_Avg            1           1           1           1      
 tx.terminated_read-ps_Max          196         159         216         198         221
 tx.terminated_write-ps_Avg           0           1           1           1           1
 tx.terminated_write-ps_Max           0           1           1           1           1
-
+</pre>
 
 Dependencies:
 
@@ -211,4 +211,4 @@ To Run in Docker:
 	 
 
 
-</pre>
+
