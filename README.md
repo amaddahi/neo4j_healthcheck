@@ -7,7 +7,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
 ### Inputs:
 
-<Min|H|D|W|Y>
+	<Min|H|D|W|Y>
 	[      --host_ip               ]
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
