@@ -30,6 +30,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 *  To avoid running historical metric analysis, use "--metric none"
 *  Additionally, --checkdb option will report on the following:
+
                Uptime
                Neo4j Kernel
                Database Restarts:
@@ -51,8 +52,8 @@ Purpose: Report and plot various statistics about the database/cluster as well a
                Recommended Configuration Settings
 ```
 
-        Examples:
-               =========
+### Examples:
+               
 	       
 	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
 	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
