@@ -1,11 +1,11 @@
 
 
-### Usage:   neo4j_health [ optional args ]
+#### Usage:   neo4j_health [ optional args ]
 
 Purpose: Report and plot various statistics about the database/cluster as well as its current state for 
          Neo4j versions 3.3.x, 3.4.x and 3.5.x 
 
-### Inputs:
+#### Inputs:
 
 	<Min|H|D|W|Y>
 	[      --host_ip               ]
@@ -23,9 +23,9 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
 				"all"|"none" >
 
-	*  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
-	*  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
-	*  If interval and periods are both not specified, daily aggregation will be performed by default
+*  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
+*  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
+*  If interval and periods are both not specified, daily aggregation will be performed by default
 	*  If no metric category is specified, it will report on "ALL" metrics
 	*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 	*  To avoid running historical metric analysis, use "--metric none"
