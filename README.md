@@ -1,11 +1,12 @@
 
 
-Usage:   neo4j_health [ optional args ]
+### Usage:   neo4j_health [ optional args ]
 
 Purpose: Report and plot various statistics about the database/cluster as well as its current state for 
          Neo4j versions 3.3.x, 3.4.x and 3.5.x 
 
-Inputs:
+### Inputs:
+
 <Min|H|D|W|Y>
 
 	[      --host_ip               ]
@@ -78,7 +79,7 @@ Inputs:
 	       
 	       
 
-Outputs:   Sample output ....
+### Outputs:   Sample output ....
 
 $neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W
 
@@ -125,7 +126,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	o ConfigObj  
 	o Matplotlib 
 	
-Enabling cvs metrics:
+### Enabling cvs metrics:
 
 	o Set the following in neo4j.conf and restart the instance.
 	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   
@@ -151,7 +152,7 @@ Enabling cvs metrics:
 	dbms.track_query_cpu_time=true
 
 
-Python Installation Instructions(Ubuntu):
+### Python Installation Instructions(Ubuntu):
 
 	o sudo apt install unzip
 	o sudo apt-get install software-properties-common
@@ -170,7 +171,7 @@ Python Installation Instructions(Ubuntu):
 	o sudo pip3 install configobj
 	o sudo pip3 install matplotlib
 
-Instructions to run the script:
+### Instructions to run the script:
 
 	1) Download the script
 	2) chmod +x neo4j_health
@@ -181,7 +182,7 @@ Instructions to run the script:
 	   By default, the script will look for the metrics directory in the current working directory, and if not found, 
 	   it will then look under the directory specified by NEO4j_HOME.
 	   
-To Run in Docker:
+### To Run in Docker:
 
          $docker build -t neo4j_health:latest -f Dockerfile .
 	 
