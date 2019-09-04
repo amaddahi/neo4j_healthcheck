@@ -26,10 +26,10 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 *  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
 *  If interval and periods are both not specified, daily aggregation will be performed by default
-	*  If no metric category is specified, it will report on "ALL" metrics
-	*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
-	*  To avoid running historical metric analysis, use "--metric none"
-	*  Additionally, --checkdb option will report on the following:
+*  If no metric category is specified, it will report on "ALL" metrics
+*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
+*  To avoid running historical metric analysis, use "--metric none"
+*  Additionally, --checkdb option will report on the following:
 
                Uptime
                Neo4j Kernel
@@ -78,7 +78,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 	       
 	       
 
-### Outputs:   Sample output ....
+#### Outputs:   Sample output ....
 
 $neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W
 
@@ -114,18 +114,18 @@ tx.terminated_write-ps_Avg           0           1           1           1      
 tx.terminated_write-ps_Max           0           1           1           1           1
 </pre>
 
-### Dependencies:
+#### Dependencies:
 
-	o Export NEO4J_HOME
-	o Export DB_USER
-	o Export DB_PWD
-	o APOC
-	o Python2 or Python3
-	o Pandas     
-	o ConfigObj  
-	o Matplotlib 
+* Export NEO4J_HOME
+* Export DB_USER
+* Export DB_PWD
+* APOC
+* Python2 or Python3
+* Pandas     
+* ConfigObj  
+* Matplotlib 
 	
-### Enabling CSV metrics:
+#### Enabling CSV metrics:
 
 	o Set the following in neo4j.conf and restart the instance.
 	o When setting the query threshold value, please set this appropriately to what makes sense for your environment.   
@@ -151,7 +151,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	dbms.track_query_cpu_time=true
 
 
-### Python Installation Instructions(Ubuntu):
+#### Python Installation Instructions(Ubuntu):
 
 	o sudo apt install unzip
 	o sudo apt-get install software-properties-common
@@ -170,7 +170,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	o sudo pip3 install configobj
 	o sudo pip3 install matplotlib
 
-### Instructions to run the script:
+#### Instructions to run the script:
 
 	1) Download the script
 	2) chmod +x neo4j_health
@@ -181,7 +181,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	   By default, the script will look for the metrics directory in the current working directory, and if not found, 
 	   it will then look under the directory specified by NEO4j_HOME.
 	   
-### To Run in Docker:
+#### To Run in Docker:
 
          $docker build -t neo4j_health:latest -f Dockerfile .
 	 
