@@ -57,8 +57,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
 #### Examples:
                
-	       
-	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+               -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
 	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
 		    
                --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
@@ -77,13 +76,14 @@ Purpose: Report and plot various statistics about the database/cluster as well a
                     # Report on four one-week periods
 
                --interval Y -periods 2  --startdate 2018-01-01
+	       
 	    
 	       
 	       
 
-#### Sample Output ....
+#### Sample Output: 
 
-`$neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
+`Usage Example:    $neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
 
 <pre>
 date                        2019-01-06  2019-01-13  2019-01-20  2019-01-27  2019-02-03
