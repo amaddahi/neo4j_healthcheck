@@ -23,13 +23,13 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
 				"all"|"none" >
 
-	o:  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
-	o:  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
-	o:  If interval and periods are both not specified, daily aggregation will be performed by default
-	o:  If no metric category is specified, it will report on "ALL" metrics
-	o:  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
-	o:  To avoid running historical metric analysis, use "--metric none"
-	o:  Additionally, --checkdb option will report on the following:
+	*  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
+	*  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
+	*  If interval and periods are both not specified, daily aggregation will be performed by default
+	*  If no metric category is specified, it will report on "ALL" metrics
+	*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
+	*  To avoid running historical metric analysis, use "--metric none"
+	*  Additionally, --checkdb option will report on the following:
 
                Uptime
                Neo4j Kernel
