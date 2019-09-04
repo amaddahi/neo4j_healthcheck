@@ -1,4 +1,4 @@
-<pre>
+
 
 Usage:   neo4j_health [ optional args ]
 
@@ -209,5 +209,5 @@ To Run in Docker:
 	 
 	 #The above example only generates report/plots for the provide metrics.
 	 
-</pre>
+
 
