@@ -22,6 +22,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
 				"all"|"none" >
+```
 
 *  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 *  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
@@ -29,6 +30,8 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  If no metric category is specified, it will report on "ALL" metrics
 *  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 *  To avoid running historical metric analysis, use "--metric none"
+
+``` 
 *  Additionally, --checkdb option will report on the following:
 
                Uptime
@@ -52,7 +55,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
                Recommended Configuration Settings
 ```
 
-### Examples:
+#### Examples:
                
 	       
 	       -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
@@ -78,9 +81,9 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 	       
 	       
 
-#### Outputs:   Sample output ....
+#### Sample Output ....
 
-$neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W
+`$neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
 
 <pre>
 date                        2019-01-06  2019-01-13  2019-01-20  2019-01-27  2019-02-03
