@@ -200,7 +200,8 @@ def get_config_recommendation():
 
        config_on_list=[]
        #config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting","dbms.backup.enabled"]
-       config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting"]
+       #config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting"]
+       config_list=["dbms.memory.pagecache.size","dbms.memory.heap.max_size","dbms.memory.heap.initial_size","causal_clustering.enable_pre_voting","causal_clustering.leader_election_timeout","causal_clustering.refuse_to_be_leader","causal_clustering.enable_pre_voting","dbms.tx_log.rotation.retention_policy","dbms.connector.bolt.thread_pool_max_size","causal_clustering.multi_dc_license","dbms.checkpoint.iops.limit","dbms.security.procedures.unrestricted"]
 
        for cfg in config_list:
           for line in lines:
@@ -1802,22 +1803,23 @@ def main(argv):
     if checkdb:
       host_db_check()
 
-    if metric_category == 'all':
-        process_metrics = 'all'
+    if metric_category != "none":
+        if metric_category == 'all':
+            process_metrics = 'all'
 
-        csv_filename = results_directory + "/" + all_csv_filename
+            csv_filename = results_directory + "/" + all_csv_filename
 
-        if os.path.isfile(csv_filename):
-            os.system("mv " + csv_filename + " " + csv_filename + ".old")
-        else:
-            os.system("touch " + csv_filename )
+            if os.path.isfile(csv_filename):
+                os.system("mv " + csv_filename + " " + csv_filename + ".old")
+            else:
+                os.system("touch " + csv_filename )
 
-        for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
+            for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
 
-            get_stats(start_date, end_date, metric_type,
+                get_stats(start_date, end_date, metric_type,
                       interval, periods, options)
-    else:
-        get_stats(start_date, end_date, metric_category,
+        else:
+            get_stats(start_date, end_date, metric_category,
                   interval, periods, options)
 
 
