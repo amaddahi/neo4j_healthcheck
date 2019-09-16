@@ -77,6 +77,8 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
                --interval Y -periods 2  --startdate 2018-01-01
 	       
+	       --checkdb -metric none
+	       
 	    
 	       
 	       
