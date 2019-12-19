@@ -119,6 +119,9 @@ tx.terminated_write-ps_Avg           0           1           1           1      
 tx.terminated_write-ps_Max           0           1           1           1           1
 </pre>
 
+![Transactions](https://github.com/amaddahi/neo4j_healthcheck/blob/master/plots/Transactions.png)
+
+
 #### Dependencies:
 
 * Export NEO4J_HOME
