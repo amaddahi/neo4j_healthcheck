@@ -145,6 +145,8 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	dbms.logs.query.page_logging_enabled=true
 	dbms.logs.query.enabled=true
 	dbms.logs.query.threshold=0
+	dbms.track_query_allocation=true
+	dbms.track_query_cpu_time=true
 	
 	metrics.enabled=true
 	metrics.neo4j.enabled=true
@@ -155,8 +157,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	metrics.csv.enabled=true
 	metrics.csv.interval=3s
 	metrics.csv.rotation.size=10M
-	dbms.track_query_allocation=true
-	dbms.track_query_cpu_time=true
+	
 
 
 #### Python Installation Instructions(Ubuntu):
