@@ -631,6 +631,13 @@ def get_filenames(metric_category):
    
     return filenames_keep
 
+def merge_rotated_files(metrics_category):
+    filenames = get_filenames(metrics_category)
+
+    for file in filenames:
+       cmd = 'cd '  + metrics_directory + ';cat '  + file[0] + '  ' + file[0] + '.[1:7]    > ' + file[0] + '.merged_rotated_files' + ' 2> /dev/null'
+       os.system(cmd)
+
 def inspect_file_start(metrics_category):
     filenames = get_filenames(metrics_category)
 
@@ -638,7 +645,7 @@ def inspect_file_start(metrics_category):
     final_starttime=0
 
     for file in filenames:
-        metrics_file = metrics_directory + "/" + file[0]
+        metrics_file = metrics_directory + "/" + file[0] + '.merged_rotated_files'
         f = open(metrics_file, "r")
         lines = f.readlines()
         f.close()
@@ -672,7 +679,7 @@ def inspect_file_start(metrics_category):
     #print(" ")
 
     for file in filenames:
-        metrics_file = metrics_directory + "/" + file[0]
+        metrics_file = metrics_directory + "/" + file[0] + '.merged_rotated_files'
         f = open(metrics_file, "r")
         lines = f.readlines()
         f.close()
@@ -697,6 +704,9 @@ def inspect_file_start(metrics_category):
                 #if (i == 4):
                      #exit()
         f.close()
+
+        cmd = 'cd ' + metrics_directory + ';rm '  + file[0] + '.merged_rotated_files  2> /dev/null'
+        os.system(cmd)
      
 def flag_server_restarts():
     filenames = get_filenames("server")
@@ -1358,10 +1368,11 @@ def merge_csv_files(filenames, metric_category):
     all_metric_filetmp = metric_category + ".all_metrics_epoch"
     i = 1
 
+    merge_rotated_files(metric_category)
     inspect_file_start(metric_category)
 
     for file in filenames:
-       
+        #print (filenames)
         filetmp_x = working_directory + "/filetmp_x"
         filetmp_i = working_directory + "/filetmp_i"
         metrics_file = metrics_directory + "/" + file[0] + ".final"
@@ -1825,3 +1836,39 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+
+# def run_benchmark():
+# def convert_date_range_to_seconds(date_range):
+
+#def main(argv):
+	#except getopt.GetoptError:
+        	#usage('')
+    	#else:
+		#def get_env():
+		# def flag_server_restarts():
+		#if checkdb:
+			#host_db_check()
+				#def run_shell():
+				#def db():
+				#def check_size():
+				#def get_config_recommendation():
+				#def get_errors():
+		#for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
+			#get_stats(start_date, end_date, metric_type, interval, periods, options)
+				#def pre_process_files(start_date, end_date, metric_category):
+					#def get_filenames(metric_category):
+					#def merge_csv_files(filenames, metric_category):
+						#def inspect_file_start(metrics_category):
+						#def get_metric_category_abbr(file_type):
+					#def convert_epoch_to_timestamp(df, timezone):
+				#def filter_date_range(start_date, end_date, df, interval, periods, options, check_point_duration):
+				#def process_cumulative_timings(interval, df, df_org, metric_category):
+				#def process_cumulative_counters(interval, df, metric_category):
+				#def normalize_stats(df, metric_category):
+				#def apply_output_projection(df,metric_category):
+				#def print_dataframe(df):
+				#def plot_metric(df, metric_category):
+					#def check_min_max(df):
+					#def get_plot_group(metric_category):
