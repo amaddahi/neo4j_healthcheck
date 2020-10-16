@@ -24,6 +24,7 @@ from configobj import ConfigObj
 
 version = '2.0'
 verbose = False
+database = "system"
 
 #host_ip = "72.211.24.138"
 #host_ip = "192.168.65.2"
@@ -46,6 +47,7 @@ dbms_mode = None
 bolt_port = 7687
 checkdb = None
 display_precision=None
+debug = None
 
 def run_benchmark():
     for i in range(1,20):
@@ -459,8 +461,8 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'log_rotation':
         filenames = [
-            ["neo4j.log_rotation.events.csv", 0, ""],
-            ["neo4j.log_rotation.total_time.csv", 2, ""]
+            ["neo4j." + database + ".log.rotation_events.csv", 0, "", "neo4j.log_rotation.events.csv"]
+            #["neo4j." + database + ".log.rotation.total_time.csv", 2, "", "neo4j.log.rotation.total_time.csv"]
     ]
     elif metric_category == 'causal_clustering':
         filenames = [
@@ -508,33 +510,30 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'object':
         filenames = [
-            ["neo4j.ids_in_use.node.csv", 0, ""],
-            ["neo4j.ids_in_use.property.csv", 0, ""],
-            ["neo4j.ids_in_use.relationship.csv", 0, ""],
-            ["neo4j.ids_in_use.relationship_type.csv", 0, ""]
+            ["neo4j." + database + ".ids_in_use.node.csv", 1, "-ps", "neo4j.ids_in_use.node.csv"],
+            ["neo4j." + database + ".ids_in_use.property.csv", 1, "-ps", "neo4j.ids_in_use.property.csv"],
+            ["neo4j." + database + ".ids_in_use.relationship.csv", 1, "-ps", "neo4j.ids_in_use.relationship.csv"],
+            ["neo4j." + database + ".ids_in_use.relationship_type.csv", 1, "-ps", "neo4j.ids_in_use.relationship_type.csv"]
         ]
-    elif metric_category == 'transaction2':
-        filenames = [
-            ["neo4j.transaction.peak_concurrent.csv", 0, ""],
-            ["neo4j.transaction.active.csv", 0, "", 2]
-       ]
+
     elif metric_category == 'transaction':
         filenames = [
-            ["neo4j.transaction.peak_concurrent.csv", 0, ""],
-            ["neo4j.transaction.started.csv", 1, "-ps"],
-            ["neo4j.transaction.active.csv", 0, "", 2],
-            ["neo4j.transaction.active_read.csv", 0, ""],
-            ["neo4j.transaction.active_write.csv", 0, ""],
-            ["neo4j.transaction.committed.csv", 1, "-ps"],
-            ["neo4j.transaction.committed_read.csv", 1, "-ps"],
-            ["neo4j.transaction.committed_write.csv", 1, "-ps"],
-            ["neo4j.transaction.rollbacks.csv", 1, "-ps"],
-            ["neo4j.transaction.rollbacks_read.csv", 1, "-ps"],
-            ["neo4j.transaction.rollbacks_write.csv", 1, "-ps"],
-            ["neo4j.transaction.terminated.csv", 1, "-ps"],
-            ["neo4j.transaction.terminated_read.csv", 1, "-ps"],
-            ["neo4j.transaction.terminated_write.csv", 1, "-ps"]
-        ]
+            ["neo4j." + database + ".transaction.peak_concurrent.csv", 0, "", "neo4j.transaction.peak_concurrent.csv"],
+            ["neo4j." + database + ".transaction.started.csv", 1, "-ps", "neo4j.transaction.started.csv"],
+            ["neo4j." + database + ".transaction.active.csv", 0, "-ps", "neo4j.transaction.active.csv"],
+            ["neo4j." + database + ".transaction.active_read.csv", 0, "-ps", "neo4j.transaction.active_read.csv"],
+            ["neo4j." + database + ".transaction.active_write.csv", 0, "-ps", "neo4j.transaction.active_write.csv"],
+            ["neo4j." + database + ".transaction.committed.csv", 1, "-ps", "neo4j.transaction.committed.csv"],
+            ["neo4j." + database + ".transaction.committed_read.csv", 1, "-ps", "neo4j.transaction.committed_read.csv"],
+            ["neo4j." + database + ".transaction.committed_write.csv", 1, "-ps", "neo4j.transaction.committed_write.csv"],
+            ["neo4j." + database + ".transaction.rollbacks.csv", 1, "-ps", "neo4j.transaction.rollbacks.csv"],
+            ["neo4j." + database + ".transaction.rollbacks_read.csv", 1, "-ps", "neo4j.transaction.rollbacks_read.csv"],
+            ["neo4j." + database + ".transaction.rollbacks_write.csv", 1, "-ps", "neo4j.transaction.rollbacks_write.csv"],
+            ["neo4j." + database + ".transaction.terminated.csv", 1, "-ps", "neo4j.transaction.terminated.csv"],
+            ["neo4j." + database + ".transaction.terminated_read.csv", 1, "-ps", "neo4j.transaction.terminated_read.csv"],
+            ["neo4j." + database + ".transaction.terminated_write.csv", 1, "-ps", "neo4j.transaction.terminated_write.csv"]
+       ]
+
     elif metric_category == 'bolt':
         filenames = [
             ["neo4j.bolt.accumulated_processing_time.csv", 2, ""],
@@ -556,8 +555,8 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'cypher':
         filenames = [
-            ["neo4j.cypher.replan_events.csv", 1, "-ps"],
-            ["neo4j.cypher.replan_wait_time.csv", 2, ""]
+            ["neo4j." + database + ".cypher.replan_events.csv", 1, "-ps", "neo4j.cypher.replan_events.csv"],
+            ["neo4j." + database + ".cypher.replan_wait_time.csv", 2, "", "neo4j.cypher.replan_wait_time.csv"]
         ]
     elif metric_category == 'page_cache':
         filenames = [
@@ -573,52 +572,64 @@ def get_filenames(metric_category):
     elif metric_category == 'check_point':
         filenames = [
             # collected at checkpoint times only and thus far less frequently collected than other datapointsk
-            ["neo4j.check_point.events.csv", 0, ""],
-            ["neo4j.check_point.check_point_duration.csv", 3, ""],
-            ["neo4j.check_point.total_time.csv", 2, ""]
+            ["neo4j." + database + ".check_point.events.csv", 0, "", "neo4j.check_point.events.csv"],
+            ["neo4j." + database + ".check_point.duration.csv", 3, "", "neo4j.check_point.check_point_duration.csv"],
+            ["neo4j." + database + ".check_point.total_time.csv", 2, "", "neo4j.check_point.total_time.csv"]
         ]
+
+
     elif metric_category == 'jvm_thread':
         filenames = [
-            ["vm.thread.count.csv", 0, ""],
-            ["vm.thread.total.csv", 0, ""]
+            ["neo4j.vm.thread.total.csv", 0, "", "vm.thread.count.csv","vm.thread.count"],
+            ["neo4j.vm.thread.count.csv", 0, "", "vm.thread.total.csv","vm.thread.total"]
         ]
     elif metric_category == 'jvm_gc2':
         filenames = [
-            ["vm.gc.time.g1_young_generation.csv", 2, ""],
-            ["vm.gc.time.g1_old_generation.csv", 2, ""]
+            #["vm.gc.time.g1_young_generation.csv", 2, ""],
+            #["vm.gc.time.g1_old_generation.csv", 2, ""]
        ]
     elif metric_category == 'jvm_gc':
         filenames = [
-            ["vm.gc.count.g1_old_generation.csv", 0, ""],
-            ["vm.gc.count.g1_young_generation.csv", 1, "-ps"],
-            ["vm.gc.time.g1_old_generation.csv", 2, ""],
-            ["vm.gc.time.g1_young_generation.csv", 2, ""]
+            ["neo4j.vm.gc.count.g1_old_generation.csv", 0, "", "vm.gc.count.g1_old_generation.csv"],
+            ["neo4j.vm.gc.count.g1_young_generation.csv", 1, "-ps","vm.gc.count.g1_young_generation.csv"],
+            ["neo4j.vm.gc.time.g1_old_generation.csv", 2, "" , "vm.gc.time.g1_old_generation.csv"],
+            ["neo4j.vm.gc.time.g1_young_generation.csv",2,"","vm.gc.time.g1_young_generation.csv"]
         ]
 
     elif metric_category == 'jvm_memory':
         filenames = [
-            ["vm.memory.buffer.direct.capacity.csv", 0, "-mb"],
-            ["vm.memory.buffer.direct.count.csv", 0, ""],
-            ["vm.memory.buffer.direct.used.csv", 0, "-mb"],
-            ["vm.memory.buffer.mapped.capacity.csv", 0, "-mb"],
-            ["vm.memory.buffer.mapped.count.csv", 0, ""],
-            ["vm.memory.buffer.mapped.used.csv", 0, "-mb"],
-            ["vm.memory.pool.code_cache.csv", 0, "-mb"],
-            ["vm.memory.pool.compressed_class_space.csv", 0, "-mb"],
-            ["vm.memory.pool.g1_eden_space.csv", 0, "-mb"],
-            ["vm.memory.pool.g1_old_gen.csv", 0, "-mb"],
-            ["vm.memory.pool.g1_survivor_space.csv", 0, "-mb"],
-            ["vm.memory.pool.metaspace.csv", 0, "-mb"]
+	    #neo4j.vm.file.descriptors.count.csv
+	    #neo4j.vm.file.descriptors.maximum.csv
+	    #neo4j.vm.heap.committed.csv
+	    #neo4j.vm.heap.max.csv
+	    #neo4j.vm.heap.used.csv
+	    #neo4j.vm.memory.pool.codeheap_'non-nmethods'.csv
+	    #neo4j.vm.memory.pool.codeheap_'non-profiled_nmethods'.csv
+	    #neo4j.vm.memory.pool.codeheap_'profiled_nmethods'.csv
+	    #neo4j.vm.pause_time.csv
+            #["vm.memory.pool.code_cache.csv", 0, "-mb"],
+            ["neo4j.vm.memory.buffer.direct.capacity.csv", 0, "-mb","vm.memory.buffer.direct.capacity.csv"],
+            ["neo4j.vm.memory.buffer.direct.count.csv", 0, "", "vm.memory.buffer.direct.count.csv"],
+            ["neo4j.vm.memory.buffer.direct.used.csv", 0,"-mb","vm.memory.buffer.direct.used.csv"],
+            ["neo4j.vm.memory.buffer.mapped.capacity.csv", 0,"-mb","vm.memory.buffer.mapped.capacity.csv" ],
+            ["neo4j.vm.memory.buffer.mapped.count.csv", 0,"","vm.memory.buffer.mapped.count.csv"],
+            ["neo4j.vm.memory.buffer.mapped.used.csv", 0,"-mb","vm.memory.buffer.mapped.used.csv"],
+            ["neo4j.vm.memory.pool.compressed_class_space.csv",0,"-mb","vm.memory.pool.compressed_class_space.csv"],
+            ["neo4j.vm.memory.pool.g1_eden_space.csv",0,"-mb","vm.memory.pool.g1_eden_space.csv"],
+            ["neo4j.vm.memory.pool.g1_old_gen.csv",0,"-mb","vm.memory.pool.g1_old_gen.csv"],
+            ["neo4j.vm.memory.pool.g1_survivor_space.csv",0,"-mb","vm.memory.pool.g1_survivor_space.csv"],
+            ["neo4j.vm.memory.pool.metaspace.csv",0,"-mb","vm.memory.pool.metaspace.csv"]
         ]
     else:
         print ("Exiting:   Incorrect Metric Type.")
 
-    
     filenames_keep=[]
     filenames_delete=[]
     i=0
     for file in filenames:
        metrics_file = metrics_directory + "/" + file[0]
+       #if debug:
+           #print (metrics_file)
        if not os.path.isfile(metrics_file):
             filenames_delete.append(file)
             #print ("Missing Metric File" + metrics_file)
@@ -627,9 +638,30 @@ def get_filenames(metric_category):
  
        i=i+1
 
-    #print (filenames_keep)
+    #if debug:
+        #print (filenames_keep)
    
     return filenames_keep
+
+def merge_rotated_files(metrics_category):
+
+    if debug:
+         print ("  ")
+         print ("merged_rotated_files......START")
+    filenames = get_filenames(metrics_category)
+
+    for file in filenames:
+
+       cmd = 'cd '  + metrics_directory + ';ls -r ' + file[0] + '*  | xargs cat > ' + file[0] + '.merged_rotated_files' + ' 2> /dev/null'
+       os.system(cmd)
+
+       #if debug:
+           #print(cmd)
+
+       #if  metrics_category == 'transaction':
+           #cmd = 'cd '  + metrics_directory + '; cp ' + file[0] + '.merged_rotated_files '  + file[3]  
+           #os.system(cmd)
+
 
 def inspect_file_start(metrics_category):
     filenames = get_filenames(metrics_category)
@@ -638,7 +670,7 @@ def inspect_file_start(metrics_category):
     final_starttime=0
 
     for file in filenames:
-        metrics_file = metrics_directory + "/" + file[0]
+        metrics_file = metrics_directory + "/" + file[0] + '.merged_rotated_files'
         f = open(metrics_file, "r")
         lines = f.readlines()
         f.close()
@@ -672,7 +704,7 @@ def inspect_file_start(metrics_category):
     #print(" ")
 
     for file in filenames:
-        metrics_file = metrics_directory + "/" + file[0]
+        metrics_file = metrics_directory + "/" + file[0] + '.merged_rotated_files'
         f = open(metrics_file, "r")
         lines = f.readlines()
         f.close()
@@ -697,6 +729,9 @@ def inspect_file_start(metrics_category):
                 #if (i == 4):
                      #exit()
         f.close()
+
+        cmd = 'cd ' + metrics_directory + ';rm '  + file[0] + '.merged_rotated_files  2> /dev/null'
+        os.system(cmd)
      
 def flag_server_restarts():
     filenames = get_filenames("server")
@@ -736,6 +771,8 @@ def flag_server_restarts():
 
 def pre_process_files(start_date, end_date, metric_category):
 
+    global debug
+ 
     df2=False
     filenames = get_filenames(metric_category)
 
@@ -744,6 +781,10 @@ def pre_process_files(start_date, end_date, metric_category):
     #
     (filetmp,check_point_duration_metric_filetmp) = merge_csv_files(filenames, metric_category)
 
+    if debug:
+         print("********************")
+         print(check_point_duration_metric_filetmp)
+         print("********************")
     #
     # Read the merged file with epoch timestamp into a dataframe
     #
@@ -755,7 +796,8 @@ def pre_process_files(start_date, end_date, metric_category):
 
     os.system("rm " + filetmp)
 
-    #df.to_csv(metric_category + "_0.csv")
+    if debug:
+        df.to_csv(metric_category + "_0.csv")
 
     #
     # Change epoch to UTC timestamp
@@ -764,7 +806,9 @@ def pre_process_files(start_date, end_date, metric_category):
     if check_point_duration_metric_filetmp:
         df2 = convert_epoch_to_timestamp(df2, 'UTC')
 
-    #df.to_csv(metric_category + "_1.csv")
+    if debug:
+        df.to_csv(metric_category + "_1.csv")
+
 
     #
     # drop any rows with null values - indicating mismatched enddates
@@ -773,13 +817,16 @@ def pre_process_files(start_date, end_date, metric_category):
     if check_point_duration_metric_filetmp:
         df2 = df2.dropna()
 
-    #df.to_csv(metric_category + "_2.csv")
+    if debug:
+        df.to_csv(metric_category + "_2.csv")
 
-    #if check_point_duration_metric_filetmp:
+    if check_point_duration_metric_filetmp:
        #return df,df2
+       os.system("rm " + check_point_duration_metric_filetmp)
     #else: 
        #return df
 
+    
     return df,df2
 
 def filter_date_range(start_date, end_date, df, interval, periods, options, check_point_duration):
@@ -877,8 +924,14 @@ def process_cumulative_timings(interval, df, df_org, metric_category):
     (metric_category_abbr, db_category_abbr) = get_metric_category_abbr(metric_category)
 
     for file in filenames:
+        #if metric_category in ('cypher'):
+        if metric_category in ('cypher','jvm_gc','check_point'):
+            file_token_name = file[3]
+        else:
+            file_token_name = file[0]
+
         x1 = re.sub(db_category_abbr + metric_category +
-                    '.', metric_category_abbr, file[0])
+                    '.', metric_category_abbr, file_token_name)
         # x2 = re.sub('.csv','', x1)
         val_label = re.sub('.csv', '', x1)
         # val_label = re.sub('metrics/','', x2)
@@ -905,19 +958,50 @@ def process_cumulative_counters(interval, df, metric_category):
 
     filenames = get_filenames(metric_category)
 
+    if debug:
+         print("metric_category:  " + metric_category)
+
     (metric_category_abbr, db_category_abbr) = get_metric_category_abbr(metric_category)
 
+   
     for file in filenames:
+        if metric_category in ('transaction','object','cypher','log_rotation','jvm_gc'):
+               file_token_name = file[3]
+        else:
+               file_token_name = file[0]
+               
         x1 = re.sub(db_category_abbr + metric_category +
-                    '.', metric_category_abbr, file[0])
+                    '.', metric_category_abbr, file_token_name)
+        if debug:
+            print("x1:" + x1)
+
         # x2 = re.sub('.csv','', x1)
         val_label = re.sub('.csv', '', x1)
+        if debug:
+            print("val_label:" + val_label)
+        if debug:
+            print("val_label:"  + val_label)
         # val_label = re.sub('metrics/','', x2)
         val_label = val_label + file[2]
+        if debug:
+            print("val_label:"  + val_label)
+
+        if debug:
+             print(" ")
+             print("metric_category_abbr:" + metric_category_abbr)
+             print("db_category_abbr:" + db_category_abbr)
+             #print("database:" + database)
+             #print("file_type:" + file_type)
+             print("x1:" + x1)
+             print("val_label:"  + val_label)
+             print(" ")
 
         # this is to address the warning when using df[val_label][df[val_label] < 0] = 0
         pd.set_option('mode.chained_assignment', None)
 
+        if debug:
+            print ("inside cumulative counter")
+            print (print(list(df)))
         #add a counter for total 
         if file[1] == 1:  # obtain rate of change per second between two points in time
 
@@ -964,7 +1048,8 @@ def normalize_stats(df, metric_category):
 def apply_output_projection(df,metric_category):
         
         column_names = list(df)
-        #print (column_names)
+        if debug:
+             print ("apply_output_projections--> ", column_names )
 
         if metric_category == 'check_point':
             output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
@@ -974,10 +1059,9 @@ def apply_output_projection(df,metric_category):
             output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
         elif metric_category == 'server':
             output_keep_list = ['srv.threads.jetty.all_Avg', 'srv.threads.jetty.all_Max', 'srv.threads.jetty.idle_Avg', 'srv.threads.jetty.idle_Max'] 
-        elif metric_category == 'object':
-            output_keep_list = ['neo4j.ids_in_use.node_Max', 'neo4j.ids_in_use.property_Max', 'neo4j.ids_in_use.relationship_Max', 'neo4j.ids_in_use.relationship_type_Max']
         elif metric_category == 'log_rotation':
-            output_keep_list = ['log.events_Sum', 'log.events_Avg', 'log.events_Max', 'log.total_time_Sum', 'log.total_time_Avg', 'log.total_time_Max']
+            #output_keep_list = ['log.events_Sum', 'log.events_Avg', 'log.events_Max', 'log.total_time_Sum', 'log.total_time_Avg', 'log.total_time_Max']
+            output_keep_list = ['log_rotation.events_Sum', 'log_rotation.events_Avg', 'log_rotation.events_Max', 'log_rotation.total_time_Sum', 'log_rotation.total_time_Avg', 'log_rotation.total_time_Max']
         elif metric_category == 'page_cache':
             output_keep_list = ['pgc.hit_ratio_Avg', 'pgc.hit_ratio_Max', 'pgc.page_faults-ps_Sum', 'pgc.page_faults-ps_Avg', 'pgc.page_faults-ps_Max', 'pgc.hits-ps_Sum', 'pgc.hits-ps_Avg', 'pgc.hits-ps_Max', 'pgc.flushes-ps_Sum', 'pgc.flushes-ps_Avg', 'pgc.flushes-ps_Max', 'pgc.eviction_exceptions-ps_Sum', 'pgc.eviction_exceptions-ps_Avg', 'pgc.eviction_exceptions-ps_Max', 'pgc.evictions-ps_Sum', 'pgc.evictions-ps_Avg', 'pgc.evictions-ps_Max', 'pgc.pins-ps_Sum', 'pgc.pins-ps_Avg', 'pgc.pins-ps_Max', 'pgc.unpins-ps_Sum', 'pgc.unpins-ps_Avg', 'pgc.unpins-ps_Max']
         elif metric_category == 'jvm_gc':
@@ -990,23 +1074,49 @@ def apply_output_projection(df,metric_category):
             output_keep_list = ['tx.peak_concurrent_Avg', 'tx.peak_concurrent_Max', 
                                  'tx.started-ps_Sum', 'tx.started-ps_Avg', 'tx.started-ps_Max', 
 				 'tx.active_Sum', 'tx.active_Avg', 'tx.active_Max', 'tx.active_read_Sum', 'tx.active_read_Avg', 'tx.active_read_Max', 'tx.active_write_Sum', 'tx.active_write_Avg', 'tx.active_write_Max', 'tx.committed-ps_Sum', 'tx.committed-ps_Avg', 'tx.committed-ps_Max', 'tx.committed_read-ps_Sum', 'tx.committed_read-ps_Avg', 'tx.committed_read-ps_Max', 'tx.committed_write-ps_Sum', 'tx.committed_write-ps_Avg', 'tx.committed_write-ps_Max', 'tx.rollbacks-ps_Sum', 'tx.rollbacks-pshgCount', 'tx.rollbacks-ps_Avg', 'tx.rollbacks-ps_Max', 'tx.rollbacks_read-ps_Sum', 'tx.rollbacks_read-ps_Avg', 'tx.rollbacks_read-ps_Max', 'tx.rollbacks_write-ps_Sum', 'tx.rollbacks_write-ps_Avg', 'tx.rollbacks_write-ps_Max', 'tx.terminated-ps_Sum', 'tx.terminated-ps_Avg', 'tx.terminated-ps_Max', 'tx.terminated_read-ps_Sum', 'tx.terminated_read-ps_Avg', 'tx.terminated_read-ps_Max', 'tx.terminated_write-ps_Sum', 'tx.terminated_write-ps_Avg', 'tx.terminated_write-ps_Max']
+
         elif metric_category == 'bolt':
             output_keep_list = ['blt.accumulated_processing_time_Sum', 'blt.accumulated_processing_time_Avg', 'blt.accumulated_processing_time_Max', 'blt.accumulated_queue_time_Sum',  'blt.accumulated_queue_time_Avg', 'blt.accumulated_queue_time_Max', 'blt.messages_done-ps_Sum', 'blt.messages_done-ps_Avg', 'blt.messages_done-ps_Max', 'blt.messages_received-ps_Sum', 'blt.messages_received-ps_Avg', 'blt.messages_received-ps_Max', 'blt.messages_failed-ps_Sum', 'blt.messages_failed-ps_Avg', 'blt.messages_failed-ps_Max', 'blt.messages_started-ps_Sum', 'blt.messages_started-ps_Avg', 'blt.messages_started-ps_Max', 'blt.connections_closed-ps_Sum', 'blt.connections_closed-ps_Avg', 'blt.connections_closed-ps_Max', 'blt.connections_opened-ps_Sum', 'blt.connections_opened-ps_Avg', 'blt.connections_opened-ps_Max', 'blt.connections_running-ps_Avg', 'blt.connections_running-ps_Max', 'blt.connections_idle-ps_Avg', 'blt.connections_idle-ps_Max', 'blt.sessions_started-ps_Sum', 'blt.sessions_started-ps_Avg', 'blt.sessions_started-ps_Max']
 
+        elif metric_category == 'object':
+            #output_keep_list = ['neo4j.ids_in_use.node_Max', 'neo4j.ids_in_use.property_Max', 'neo4j.ids_in_use.relationship_Max', 'neo4j.ids_in_use.relationship_type_Max']
+                    output_keep_list = ['neo4j.ids_in_use.node-ps_Sum', 'neo4j.ids_in_use.node-ps_Avg', 'neo4j.ids_in_use.node-ps_Max',
+                            'neo4j.ids_in_use.property-ps_Sum', 'neo4j.ids_in_use.property-ps_Avg', 'neo4j.ids_in_use.property-ps_Max',
+                            'neo4j.ids_in_use.relationship-ps_Sum', 'neo4j.ids_in_use.relationship-ps_Avg', 'neo4j.ids_in_use.relationship-ps_Max',
+                            'neo4j.ids_in_use.relationship_type-ps_Sum', 'neo4j.ids_in_use.relationship_type-ps_Avg', 'neo4j.ids_in_use.relationship_type-ps_Max']
+
         output_delete_list = list(set(column_names) - set(output_keep_list))
+
 
         df_output = df.drop(output_delete_list, 1, errors='ignore')
     
+        if debug:
+              print ("DF before apply projection")
+              print (df.T)
+              print("OUTPUT_KEEP_LIST: ", output_keep_list )
+              print("OUTPUT_DELETE_LIST: ", output_delete_list )
+              print ("DF AFTER apply projection")
+              print (df_output.T)
+
         for label in list(df_output):
-            #print (label)  
+            if debug:
+                 print ("LABELS---->")
+                 print (label)  
+                 print (" ")
             pattern_sum='-ps_Sum'
             pattern_count='-ps_Count'
             pattern_avg='-ps_Avg'
             pattern_max='-ps_Max'
             pattern_cc_message='core.message_processing'
             pattern_cc_core='cc.core'
+
+            if debug:
+                print(label)
+
             if pattern_sum in label:
-                df_output.rename(columns={label:label.replace(pattern_sum,'_Sum')}, inplace=True)
+                df_output[label] = df_output[label]*metrics_csv_interval
+                df_output.rename(columns={label: label.replace(
+                     pattern_sum, '_Sum')}, inplace=True)
                 #print (label + "   " + label.replace(pattern_sum,'_Sum'))
             elif pattern_count in label:
                 df_output.rename(columns={label:label.replace(pattern_count,'_Count')}, inplace=True)
@@ -1034,6 +1144,8 @@ def apply_output_projection(df,metric_category):
 
 def get_stats(start_date, end_date, metric_category, interval, periods, options):
 
+    global debug
+
     print (" ")
     print ("###################################################################")
     print (" ")
@@ -1057,8 +1169,9 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     print (" ")
     (df,df2) = pre_process_files(start_date, end_date, metric_category)
 
-    #df.to_csv(metric_category + "11.csv")
-    #df2.to_csv(metric_category + "12.csv")
+    if debug:
+        df.to_csv(metric_category + "11.csv")
+        #df2.to_csv(metric_category + "12.csv")
 
     # can this be moved to main?
     #
@@ -1076,16 +1189,19 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
 
     df_org=df
 
-    #df.to_csv(metric_category + "_df_filtered_date_2.csv")
-    # print_dataframe(df.tail(5))
+    if debug:
+        df.to_csv(metric_category + "_df_filtered_date_2.csv")
+        # print_dataframe(df.tail(5))
 
     df = process_cumulative_counters(interval, df, metric_category)
 
-    #df.to_csv(metric_category + "_df_cumu_cntr_3.csv")
+    if debug:
+        df.to_csv(metric_category + "_df_cumu_cntr_3.csv")
 
     df = process_cumulative_timings(interval, df, df_org, metric_category)
 
-    #df.to_csv(metric_category + "_df_cumu_time_4.csv")
+    if debug:
+        df.to_csv(metric_category + "_df_cumu_time_4.csv")
 
     if options is False:
         interval = "H"
@@ -1120,11 +1236,17 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     if interval in ('S','Min'):
        df=df[(df.sum(axis=1) != 0)]       
 
-    #print (df.T)
+    if debug:
+        print (" ")
+        print (df.T)
+        print (" ")
 
     # only applies to check_point duration 
     if isinstance(df2 , pd.DataFrame):
         df = df.merge(df2,how='left', left_on='date', right_on='date')
+
+    #if debug:
+        #print_dataframe(df.tail(15).T)
 
     df = apply_output_projection(df,metric_category)
 
@@ -1310,6 +1432,9 @@ def convert_epoch_to_timestamp(df, timezone):
 
 def get_metric_category_abbr(file_type):
 
+    if debug:
+        print("get_metric_category filetype: " + file_type)
+
     if file_type == "transaction":
         metric_category_abbr = "tx."
         db_category_abbr = "neo4j."
@@ -1340,9 +1465,12 @@ def get_metric_category_abbr(file_type):
     elif file_type == "log_rotation":
         metric_category_abbr = "log."
         db_category_abbr = "neo4j."
+    elif file_type == "log":
+        metric_category_abbr = "log."
+        db_category_abbr = "neo4j."
     elif file_type == "jvm_gc":
         metric_category_abbr = "gc."
-        db_category_abbr = "vm."
+        db_category_abbr = "neo4j.vm."
     elif file_type == "jvm_memory":
         metric_category_abbr = "mem."
         db_category_abbr = "vm."
@@ -1358,16 +1486,24 @@ def merge_csv_files(filenames, metric_category):
     all_metric_filetmp = metric_category + ".all_metrics_epoch"
     i = 1
 
+    merge_rotated_files(metric_category)
     inspect_file_start(metric_category)
 
     for file in filenames:
-       
+        #print (filenames)
         filetmp_x = working_directory + "/filetmp_x"
         filetmp_i = working_directory + "/filetmp_i"
         metrics_file = metrics_directory + "/" + file[0] + ".final"
         metrics_concat_file = working_directory + "/" + file[0] + ".cat"
 
-        file_type = file[0].split('.')[1]
+
+        if metric_category in ('transaction','object','cypher','log_rotation','check_point','jvm_thread','jvm_gc'):
+                file_type = file[0].split('.')[2]    #  Assumes neo4j. + database + .category
+        else:
+                file_type = file[0].split('.')[1]    
+
+        if debug:
+            print("file_type==: " + file_type)
 
         if file_type == "thread":
             file_type = "jvm_thread"
@@ -1381,16 +1517,67 @@ def merge_csv_files(filenames, metric_category):
         (metric_category_abbr, db_category_abbr) = get_metric_category_abbr(file_type)
 
         #
-        # Rename column names
+        # Rename column index names
         #
-        # string1 = "neo4j." + file_type + "."
-        string1 = db_category_abbr + file_type + "."
-        val_label = re.sub(
-            '', '', (re.sub('.csv', '', (re.sub(string1, metric_category_abbr, file[0])))))
+
+
+        #metric_category_abbr:ckp.
+        #db_category_abbr:neo4j.
+        #database:testdb1
+        #file_type:check_point
+        #string1:neo4j.testdb1.check_point.
+        #file[0]:neo4j.testdb1.check_point.events.csv
+        #column Name:neo4j.check_point.events
+
+
+
+        if file_type in ( 'transaction','object','cypher','log','jvm_thread'):
+             string1 = db_category_abbr + database + '.' + file_type + "."
+             if file_type in ('transaction','cypher','log_rotation','jvm_gc'):
+                  val_label = re.sub(
+                      '', '', (re.sub('.csv', '', (re.sub(string1, metric_category_abbr, file[0])))))
+             else:
+                 val_label = re.sub(
+                     '', '', (re.sub('.csv', '', (re.sub(string1, metric_category_abbr, file[3])))))
+        elif file_type in ('jvm_memory','check_point'):
+             string1 = db_category_abbr + file_type + "."
+             val_label=re.sub('', '', (re.sub('.csv', '', (re.sub(string1, metric_category_abbr, file[3])))))
+             if debug:
+             	 print(" ")
+             	 print("file[0]:" + file[0])
+             	 print("file[3]:" + file[3])
+             	 print("db_category_abbr:" + db_category_abbr + " file_type: "  + file_type  )
+             	 print("string1:" + string1)
+             	 print("metric_category_abbr:" + metric_category_abbr)
+             	 print("column Name:" + val_label)
+             	 print(" ")
+
+        else:
+             string1 = db_category_abbr + file_type + "."
+             val_label = re.sub(
+                  '', '', (re.sub('.csv', '', (re.sub(string1, metric_category_abbr, file[0])))))
+
+
+
+        # Add per second (-ps) to the column names if needed
+
+
+        if debug:
+             print(" ")
+             print("file[0]:" + file[0])
+             if metric_category not in ('bolt','page_cache','server'):
+                print("file[3]:" + file[3])
+             print("db_category_abbr:" + db_category_abbr + " database: " + database + " file_type: " + file_type  )
+             #print("database:" + database)
+             #print("file_type:" + file_type)
+             print("metric_category_abbr:" + metric_category_abbr)
+             print("string1:" + string1)
+             print("column Name:" + val_label)
+             print(" ")
 
         # Add per second (-ps) to the column names if needed
         val_label = val_label + file[2]
-        # print("column:" + val_label)
+
 
         # rename the label from value to custom label name
         #
@@ -1672,6 +1859,7 @@ To Run in Docker:
 
 def main(argv):
 
+    global database
     global process_metrics
     global bolt_port
     global checkdb
@@ -1681,6 +1869,7 @@ def main(argv):
     global bolt_port
     global metrics_csv_interval
     global host_ip
+    global debug
 
     start_date = None
     end_date = None
@@ -1694,7 +1883,7 @@ def main(argv):
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'i:b:p:s:e:m:o:cvdh', [
-            'host_ip=','interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
+            'database=','debug','host_ip=','interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
 
     except getopt.GetoptError:
         usage('')
@@ -1721,13 +1910,16 @@ def main(argv):
                        interval_string= 'Weeks'
                     elif interval == 'Y':
                        interval_string= 'Years'
-
+            elif opt in ('-db', '--database'):
+                database = arg
             elif opt in ('-p', '--periods'):
                 periods = arg
             elif opt in ('-s', '--startdate'):
                 start_date = arg
             elif opt in ('-e', '--enddate'):
                 end_date = arg
+            elif opt in ('--debug'):
+                debug = True
             elif opt in ('-m', '--metric'):
                 metric_category = arg
                 if metric_category not in ("transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation", "all","none"):
@@ -1779,6 +1971,8 @@ def main(argv):
       print (" ")
       print (" ")
       print (" ")
+      print ('DATABASE            :', database)
+      print ('DEBUG               :', debug)
       print ('STARTDATE           :', start_date)
       print ('ENDDATE             :', end_date)
       print ('INTERVAL            :', interval_string)
@@ -1825,3 +2019,46 @@ def main(argv):
 
 if __name__ == "__main__":
     main(sys.argv[1:])
+
+
+
+# Works:  Cypher, Transaction, object, check_point
+# Works:  bolt, page_cache, server, jvm_thread, jvm_gc
+# rotates to:  log_rotation
+# jvm:    jvm_memory
+# causal_clusterin:    
+
+
+# def run_benchmark():
+# def convert_date_range_to_seconds(date_range):
+
+#def main(argv):
+	#except getopt.GetoptError:
+        	#usage('')
+    	#else:
+		#def get_env():
+		# def flag_server_restarts():
+		#if checkdb:
+			#host_db_check()
+				#def run_shell():
+				#def db():
+				#def check_size():
+				#def get_config_recommendation():
+				#def get_errors():
+		#for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
+			#get_stats(start_date, end_date, metric_type, interval, periods, options)
+				#def pre_process_files(start_date, end_date, metric_category):
+					#def get_filenames(metric_category):     based on category get file names
+					#def merge_csv_files(filenames, metric_category):    merge all rotated file -->  neo4j.dbname.category.csv ->  .merged_rotated_files
+						#def inspect_file_start(metrics_category):   align timelines and produce neo4j.db.name.category.csv.final   (t,value)
+						#def get_metric_category_abbr(file_type):
+					#def convert_epoch_to_timestamp(df, timezone):
+				#def filter_date_range(start_date, end_date, df, interval, periods, options, check_point_duration):
+				#def process_cumulative_timings(interval, df, df_org, metric_category):
+				#def process_cumulative_counters(interval, df, metric_category):
+				#def normalize_stats(df, metric_category):
+				#def apply_output_projection(df,metric_category):
+				#def print_dataframe(df):
+				#def plot_metric(df, metric_category):
+					#def check_min_max(df):
+					#def get_plot_group(metric_category):
