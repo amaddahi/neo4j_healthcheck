@@ -46,6 +46,7 @@ dbms_mode = None
 bolt_port = 7687
 checkdb = None
 display_precision=None
+debug = None
 
 def run_benchmark():
     for i in range(1,20):
@@ -508,15 +509,15 @@ def get_filenames(metric_category):
         ]
     elif metric_category == 'object':
         filenames = [
-            ["neo4j.ids_in_use.node.csv", 0, ""],
-            ["neo4j.ids_in_use.property.csv", 0, ""],
-            ["neo4j.ids_in_use.relationship.csv", 0, ""],
-            ["neo4j.ids_in_use.relationship_type.csv", 0, ""]
+            ["neo4j.ids_in_use.node.csv", 1, "-ps"],
+            ["neo4j.ids_in_use.property.csv", 1, "-ps"],
+            ["neo4j.ids_in_use.relationship.csv", 1, "-ps"],
+            ["neo4j.ids_in_use.relationship_type.csv", 1, "-ps"]
         ]
     elif metric_category == 'transaction2':
         filenames = [
-            ["neo4j.transaction.peak_concurrent.csv", 0, ""],
-            ["neo4j.transaction.active.csv", 0, "", 2]
+            ["neo4j.transaction.active.csv", 0, "", 2],
+            ["neo4j.transaction.started.csv", 1, "-ps"]
        ]
     elif metric_category == 'transaction':
         filenames = [
@@ -627,15 +628,28 @@ def get_filenames(metric_category):
  
        i=i+1
 
-    #print (filenames_keep)
+    #if debug:
+        #print (filenames_keep)
    
     return filenames_keep
+
+def delete_tmpfile(cleanup_filename):
+       if os.path.exists(cleanup_filename):
+            os.system("rm " + cleanup_filename)
+
+      
 
 def merge_rotated_files(metrics_category):
     filenames = get_filenames(metrics_category)
 
     for file in filenames:
-       cmd = 'cd '  + metrics_directory + ';cat '  + file[0] + '  ' + file[0] + '.[1:7]    > ' + file[0] + '.merged_rotated_files' + ' 2> /dev/null'
+       global debug
+
+       delete_tmpfile(metrics_directory + "/" + file[0] + '.cat')
+       delete_tmpfile(metrics_directory + "/" + file[0] + '.final')
+       
+       #cmd = 'cd '  + metrics_directory + ';cat '  + file[0] + '  ' + file[0] + '.[1:7]    > ' + file[0] + '.merged_rotated_files' + ' 2> /dev/null'
+       cmd = 'cd '  + metrics_directory + ';ls -r ' + file[0] + '*  | xargs cat > ' + file[0] + '.merged_rotated_files' + ' 2> /dev/null'
        os.system(cmd)
 
 def inspect_file_start(metrics_category):
@@ -705,8 +719,10 @@ def inspect_file_start(metrics_category):
                      #exit()
         f.close()
 
-        cmd = 'cd ' + metrics_directory + ';rm '  + file[0] + '.merged_rotated_files  2> /dev/null'
-        os.system(cmd)
+        #cmd = 'cd ' + metrics_directory + ';rm '  + file[0] + '.merged_rotated_files  2> /dev/null'
+        #os.system(cmd)
+        tmpfile=metrics_directory + "/" + file[0] + '.merged_rotated_files'
+        delete_tmpfile(tmpfile)
      
 def flag_server_restarts():
     filenames = get_filenames("server")
@@ -746,6 +762,8 @@ def flag_server_restarts():
 
 def pre_process_files(start_date, end_date, metric_category):
 
+    global debug
+ 
     df2=False
     filenames = get_filenames(metric_category)
 
@@ -761,11 +779,12 @@ def pre_process_files(start_date, end_date, metric_category):
     if check_point_duration_metric_filetmp:
         df2 = pd.read_csv(check_point_duration_metric_filetmp)
 
-    #df = pd.read_csv(filetmp, parse_dates=['date'], date_parser=lambda epoch: pd.to_datetime(epoch, unit='s'))
+    #if debug:
+       #df = pd.read_csv(filetmp, parse_dates=['date'], date_parser=lambda epoch: pd.to_datetime(epoch, unit='s'))
 
-    os.system("rm " + filetmp)
+    #os.system("rm " + filetmp)
 
-    #df.to_csv(metric_category + "_0.csv")
+    df.to_csv(metric_category + "_0.csv")
 
     #
     # Change epoch to UTC timestamp
@@ -774,7 +793,11 @@ def pre_process_files(start_date, end_date, metric_category):
     if check_point_duration_metric_filetmp:
         df2 = convert_epoch_to_timestamp(df2, 'UTC')
 
-    #df.to_csv(metric_category + "_1.csv")
+    if debug:
+        df.to_csv(metric_category + "_1.csv")
+        if check_point_duration_metric_filetmp:
+           df2.to_csv(metric_category + "_1c.csv")
+
 
     #
     # drop any rows with null values - indicating mismatched enddates
@@ -783,12 +806,15 @@ def pre_process_files(start_date, end_date, metric_category):
     if check_point_duration_metric_filetmp:
         df2 = df2.dropna()
 
-    #df.to_csv(metric_category + "_2.csv")
+    if debug:
+        df.to_csv(metric_category + "_2.csv")
+        if check_point_duration_metric_filetmp:
+           df2.to_csv(metric_category + "_2c.csv")
 
-    #if check_point_duration_metric_filetmp:
-       #return df,df2
-    #else: 
-       #return df
+    if check_point_duration_metric_filetmp:
+        delete_tmpfile(check_point_duration_metric_filetmp)
+    else:
+        delete_tmpfile(filetmp)
 
     return df,df2
 
@@ -935,10 +961,11 @@ def process_cumulative_counters(interval, df, metric_category):
                    #df[val_label] = df[val_label].diff().fillna(0)
             #else:
 
-                   #df[val_label] = (df[val_label].diff()).fillna(0)
                    df[val_label] = (df[val_label].diff()/metrics_csv_interval).fillna(0)
-                   #df[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
-                   #df[val_label] = np.ceil(df[val_label].diff()).fillna(0).astype(int)
+
+                 
+                   if debug:
+                          df.to_csv(metric_category + "_df_cumu_cntr_3x.csv")
 
                    df[val_label][df[val_label] < 0] = 0
 
@@ -984,8 +1011,6 @@ def apply_output_projection(df,metric_category):
             output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
         elif metric_category == 'server':
             output_keep_list = ['srv.threads.jetty.all_Avg', 'srv.threads.jetty.all_Max', 'srv.threads.jetty.idle_Avg', 'srv.threads.jetty.idle_Max'] 
-        elif metric_category == 'object':
-            output_keep_list = ['neo4j.ids_in_use.node_Max', 'neo4j.ids_in_use.property_Max', 'neo4j.ids_in_use.relationship_Max', 'neo4j.ids_in_use.relationship_type_Max']
         elif metric_category == 'log_rotation':
             output_keep_list = ['log.events_Sum', 'log.events_Avg', 'log.events_Max', 'log.total_time_Sum', 'log.total_time_Avg', 'log.total_time_Max']
         elif metric_category == 'page_cache':
@@ -1003,24 +1028,38 @@ def apply_output_projection(df,metric_category):
         elif metric_category == 'bolt':
             output_keep_list = ['blt.accumulated_processing_time_Sum', 'blt.accumulated_processing_time_Avg', 'blt.accumulated_processing_time_Max', 'blt.accumulated_queue_time_Sum',  'blt.accumulated_queue_time_Avg', 'blt.accumulated_queue_time_Max', 'blt.messages_done-ps_Sum', 'blt.messages_done-ps_Avg', 'blt.messages_done-ps_Max', 'blt.messages_received-ps_Sum', 'blt.messages_received-ps_Avg', 'blt.messages_received-ps_Max', 'blt.messages_failed-ps_Sum', 'blt.messages_failed-ps_Avg', 'blt.messages_failed-ps_Max', 'blt.messages_started-ps_Sum', 'blt.messages_started-ps_Avg', 'blt.messages_started-ps_Max', 'blt.connections_closed-ps_Sum', 'blt.connections_closed-ps_Avg', 'blt.connections_closed-ps_Max', 'blt.connections_opened-ps_Sum', 'blt.connections_opened-ps_Avg', 'blt.connections_opened-ps_Max', 'blt.connections_running-ps_Avg', 'blt.connections_running-ps_Max', 'blt.connections_idle-ps_Avg', 'blt.connections_idle-ps_Max', 'blt.sessions_started-ps_Sum', 'blt.sessions_started-ps_Avg', 'blt.sessions_started-ps_Max']
 
+        elif metric_category == 'object':
+            #output_keep_list = ['neo4j.ids_in_use.node_Max', 'neo4j.ids_in_use.property_Max', 'neo4j.ids_in_use.relationship_Max', 'neo4j.ids_in_use.relationship_type_Max']
+            output_keep_list = [ 'neo4j.ids_in_use.node-ps_Sum', 'neo4j.ids_in_use.node-ps_Avg', 'neo4j.ids_in_use.node-ps_Max',
+                                 'neo4j.ids_in_use.property-ps_Sum', 'neo4j.ids_in_use.property-ps_Avg', 'neo4j.ids_in_use.property-ps_Max',
+                                 'neo4j.ids_in_use.relationship-ps_Sum', 'neo4j.ids_in_use.relationship-ps_Avg', 'neo4j.ids_in_use.relationship-ps_Max',
+                                 'neo4j.ids_in_use.relationship_type-ps_Sum', 'neo4j.ids_in_use.relationship_type-ps_Avg', 'neo4j.ids_in_use.relationship_type-ps_Max']
+
         output_delete_list = list(set(column_names) - set(output_keep_list))
 
+        if debug:
+             print("apply_output_projection:output_keep_list: ",  output_keep_list)
+             print("apply_output_projection:output_delete_list: ",  output_delete_list)
+             print(df)
+  
+
         df_output = df.drop(output_delete_list, 1, errors='ignore')
-    
+   
+ 
         for label in list(df_output):
-            #print (label)  
             pattern_sum='-ps_Sum'
             pattern_count='-ps_Count'
             pattern_avg='-ps_Avg'
             pattern_max='-ps_Max'
             pattern_cc_message='core.message_processing'
             pattern_cc_core='cc.core'
+            if debug:
+                print("apply_output_projection:label: ",  label)
             if pattern_sum in label:
+                df_output[label]=df_output[label]*metrics_csv_interval
                 df_output.rename(columns={label:label.replace(pattern_sum,'_Sum')}, inplace=True)
-                #print (label + "   " + label.replace(pattern_sum,'_Sum'))
             elif pattern_count in label:
                 df_output.rename(columns={label:label.replace(pattern_count,'_Count')}, inplace=True)
-                #print (label + "   " + label.replace(pattern_count,'_Count'))
             elif ((pattern_avg in label) and (metric_category == 'bolt') and (('connections_running' in label) or ('connections_idle' in label))) :
                 df_output.rename(columns={label:label.replace(pattern_avg,'_Avg')}, inplace=True)
                 #print (label + "   " + label.replace(pattern_avg,'_Avg'))
@@ -1043,6 +1082,8 @@ def apply_output_projection(df,metric_category):
 
 
 def get_stats(start_date, end_date, metric_category, interval, periods, options):
+
+    global debug
 
     print (" ")
     print ("###################################################################")
@@ -1067,8 +1108,9 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
     print (" ")
     (df,df2) = pre_process_files(start_date, end_date, metric_category)
 
-    #df.to_csv(metric_category + "11.csv")
-    #df2.to_csv(metric_category + "12.csv")
+    if debug:
+        df.to_csv(metric_category + "11.csv")
+        df2.to_csv(metric_category + "11c.csv")
 
     # can this be moved to main?
     #
@@ -1086,70 +1128,75 @@ def get_stats(start_date, end_date, metric_category, interval, periods, options)
 
     df_org=df
 
-    #df.to_csv(metric_category + "_df_filtered_date_2.csv")
-    # print_dataframe(df.tail(5))
+    if debug:
+        df.to_csv(metric_category + "_df_filtered_date_2.csv")
+        # print_dataframe(df.tail(5))
 
     df = process_cumulative_counters(interval, df, metric_category)
 
-    #df.to_csv(metric_category + "_df_cumu_cntr_3.csv")
+    if debug:
+        df.to_csv(metric_category + "_df_cumu_cntr_3.csv")
 
     df = process_cumulative_timings(interval, df, df_org, metric_category)
 
-    #df.to_csv(metric_category + "_df_cumu_time_4.csv")
+    if debug:
+        df.to_csv(metric_category + "_df_cumu_time_4.csv")
 
     if options is False:
         interval = "H"
 
     df = df.replace([np.inf, -np.inf], np.nan)
 
-    #print_dataframe(df.head(5))
+    if debug:
+           print_dataframe(df.head(5))
     #print(df.index.tolist())
 
     #df = np.ceil(df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0).astype(int)
-    df = (df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
+    df_aggr = (df.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
 
-    #print_dataframe(df.tail(15).T)
+    if debug:
+         print_dataframe(df_aggr.tail(15).T)
+
     if isinstance(df2 , pd.DataFrame):
           df2 = (df2.groupby(pd.Grouper(key='date', freq=interval)).agg( [('Sum', 'sum') , ('Count', 'count'), ('Avg', 'mean'), ('Max', 'max')] )).fillna(0)
 
     
-    #df.to_csv(metric_category + "avg-max-5.csv")
+    #df_aggr.to_csv(metric_category + "avg-max-5.csv")
 
     # Reformat dataframe column labels
     #
-    df.columns = ["_".join(x) for x in df.columns.ravel()]
+    df_aggr.columns = ["_".join(x) for x in df_aggr.columns.ravel()]
     if isinstance(df2 , pd.DataFrame):
          df2.columns = ["_".join(x) for x in df2.columns.ravel()]
 
-    #print(list(df))
 
-    df = normalize_stats(df,metric_category)
+    df_aggr = normalize_stats(df_aggr,metric_category)
 
     # When aggregating by the seconds, remove dataframe columns where all different metrics are zero  
     #
     if interval in ('S','Min'):
-       df=df[(df.sum(axis=1) != 0)]       
+       df_aggr=df_aggr[(df_aggr.sum(axis=1) != 0)]       
 
-    #print (df.T)
+    #print (df_aggr.T)
 
     # only applies to check_point duration 
     if isinstance(df2 , pd.DataFrame):
-        df = df.merge(df2,how='left', left_on='date', right_on='date')
+        df_aggr = df_aggr.merge(df2,how='left', left_on='date', right_on='date')
 
-    df = apply_output_projection(df,metric_category)
+    df_aggr = apply_output_projection(df_aggr,metric_category)
 
-    print_dataframe(df.tail(15).T)
+    print_dataframe(df_aggr.tail(15).T)
 
     # TODO - check this
     #
     if process_metrics == 'all':
         csv_filename = results_directory + "/" + all_csv_filename
-        df.to_csv(csv_filename,mode='a')
+        df_aggr.to_csv(csv_filename,mode='a')
     else:
         csv_filename = results_directory + "/" + metric_category + ".csv"
-        df.to_csv(csv_filename)
+        df_aggr.to_csv(csv_filename)
 
-    plot_metric(df, metric_category)
+    plot_metric(df_aggr, metric_category)
 
 
 def get_plot_group(metric_category):
@@ -1378,6 +1425,7 @@ def merge_csv_files(filenames, metric_category):
         metrics_file = metrics_directory + "/" + file[0] + ".final"
         metrics_concat_file = working_directory + "/" + file[0] + ".cat"
 
+
         file_type = file[0].split('.')[1]
 
         if file_type == "thread":
@@ -1418,7 +1466,6 @@ def merge_csv_files(filenames, metric_category):
         cmd = "cut -d, -f1,2 " + metrics_concat_file + " | sed 's/count/value/g' |  sed 's/value/" + val_label + "/g'  > " + metrics_file
         os.system(cmd)
 
-
         #
         # concat metric files column by column for each metric category
         #
@@ -1433,13 +1480,19 @@ def merge_csv_files(filenames, metric_category):
             elif i > 1:
                 cmd = "cut -d, -f2  " + metrics_file + "  | paste -d,  " + all_metric_filetmp + "   - > tmpfile ;  mv tmpfile " + all_metric_filetmp
                 os.system(cmd)
-            os.system("rm " + metrics_file)
+            delete_tmpfile(metrics_file)
             i += 1
         else:
             check_point_duration_metric_filetmp=metrics_file
 
-        os.system("rm " + metrics_concat_file)
-        os.system("rm " + file_ascii)
+        delete_tmpfile(metrics_concat_file)
+        delete_tmpfile(file_ascii)
+
+    if debug:
+          print ("merge_csv_file:check_point_duration_metric_filetmp: " + check_point_duration_metric_filetmp)
+          print ("merge_csv_file:metrics_file: " + metrics_file)
+          print (" ")
+          #exit(55)
 
     return all_metric_filetmp, check_point_duration_metric_filetmp
 
@@ -1692,6 +1745,7 @@ def main(argv):
     global bolt_port
     global metrics_csv_interval
     global host_ip
+    global debug
 
     start_date = None
     end_date = None
@@ -1705,7 +1759,7 @@ def main(argv):
 
     try:
         opts, args = getopt.getopt(sys.argv[1:], 'i:b:p:s:e:m:o:cvdh', [
-            'host_ip=','interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
+            'debug','host_ip=','interval=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
 
     except getopt.GetoptError:
         usage('')
@@ -1739,6 +1793,8 @@ def main(argv):
                 start_date = arg
             elif opt in ('-e', '--enddate'):
                 end_date = arg
+            elif opt in ('--debug'):
+                debug = True
             elif opt in ('-m', '--metric'):
                 metric_category = arg
                 if metric_category not in ("transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation", "all","none"):
@@ -1790,6 +1846,7 @@ def main(argv):
       print (" ")
       print (" ")
       print (" ")
+      print ('DEBUG               :', debug)
       print ('STARTDATE           :', start_date)
       print ('ENDDATE             :', end_date)
       print ('INTERVAL            :', interval_string)
@@ -1825,7 +1882,8 @@ def main(argv):
             else:
                 os.system("touch " + csv_filename )
 
-            for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
+            #for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
+            for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_thread", "log_rotation","causal_clustering"):
 
                 get_stats(start_date, end_date, metric_type,
                       interval, periods, options)
@@ -1872,3 +1930,12 @@ if __name__ == "__main__":
 				#def plot_metric(df, metric_category):
 					#def check_min_max(df):
 					#def get_plot_group(metric_category):
+
+              #"target": "aliasByNode(scaleToSeconds(nonNegativeDerivative(consolidateBy(sumSeries(database-cluster-db1.vm.gc.time.*), 'max')), 0.2), 0)",
+              #"target": "aliasByNode(scaleToSeconds(nonNegativeDerivative(consolidateBy(sumSeries(database-cluster-db2.vm.gc.time.*), 'max')), 0.2), 0)",
+              #"target": "aliasByNode(scaleToSeconds(nonNegativeDerivative(consolidateBy(sumSeries(database-cluster-db3.vm.gc.time.*), 'max')), 0.2), 0)",
+              #"target": "groupByNode(database*.vm.memory.pool.*, 0, 'sum')",
+
+              #df[val_label] = (df[val_label].diff()).fillna(0)
+              #f[val_label] = np.ceil(df[val_label].diff()/metrics_csv_interval).fillna(0).astype(int)
+              #df[val_label] = np.ceil(df[val_label].diff()).fillna(0).astype(int)
