@@ -30,6 +30,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  If no metric category is specified, it will report on "ALL" metrics
 *  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
 *  To avoid running historical metric analysis, use "--metric none"
+* ./3_neo4j_health --customer=wu -m transaction -i D -p 7 --admin_report_directory=/home/ubuntu/78-wu
 
 ``` 
 *  Additionally, --checkdb option will report on the following:
