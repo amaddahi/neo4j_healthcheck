@@ -31,7 +31,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 *  To avoid running historical metric analysis, use "--metric none"
 
 ``` 
-*  Additionally, --checkdb option will report on the following:
+*  Additionally, --checkdb option will report on the following(if executed on a host with live database):
 
                Uptime
                Neo4j Kernel
