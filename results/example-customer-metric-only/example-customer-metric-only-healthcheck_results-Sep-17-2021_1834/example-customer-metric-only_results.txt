@@ -1,0 +1,113 @@
+
+date                                      2021-08-28  2021-08-29  2021-08-30  2021-08-31
+neo4j.neo4j.neo4j.count.node_Max              118264      118270      118316      118312
+neo4j.neo4j.neo4j.count.relationship_Max      173138      173145      174441      174432
+
+
+date                                 2021-08-28  2021-08-29  2021-08-30  2021-08-31
+neo4j.neo4j.store.size.database_Max       1,052       1,052       1,052       1,052
+neo4j.neo4j.store.size.total_Max         95,953      92,453      85,703      81,685
+
+
+date                                       2021-08-28  2021-08-29  2021-08-30  2021-08-31
+neo4j.ids_in_use.node_Sum                           0           0           0           0
+neo4j.ids_in_use.node-ps_Avg                        0           0           0           0
+neo4j.ids_in_use.node-ps_Max                        0           0           0           0
+neo4j.ids_in_use.property_Sum                       0           0           0           0
+neo4j.ids_in_use.property-ps_Avg                    0           0           0           0
+neo4j.ids_in_use.property-ps_Max                    0           0           0           0
+neo4j.ids_in_use.relationship_Sum                   0           0           0           0
+neo4j.ids_in_use.relationship-ps_Avg                0           0           0           0
+neo4j.ids_in_use.relationship-ps_Max                0           0           0           0
+neo4j.ids_in_use.relationship_type_Sum              0           0           0           0
+neo4j.ids_in_use.relationship_type-ps_Avg           0           0           0           0
+neo4j.ids_in_use.relationship_type-ps_Max           0           0           0           0
+
+
+date                        2021-08-28  2021-08-29  2021-08-30  2021-08-31
+tx.peak_concurrent_Avg             247         262         274         274
+tx.peak_concurrent_Max             247         274         274         274
+tx.started_Sum               8,957,746  14,512,705  17,205,164  12,444,820
+tx.started-ps_Avg                  175         168         199         353
+tx.started-ps_Max                  446         463         927       2,695
+tx.committed_Sum             8,913,446  14,433,308  16,512,261   9,814,339
+tx.committed-ps_Avg                175         167         191         278
+tx.committed-ps_Max                443         462         917       1,572
+tx.committed_read_Sum        3,190,510   5,278,915   6,198,698   3,882,124
+tx.committed_read-ps_Avg            62          61          72         110
+tx.committed_read-ps_Max           168         181         811         705
+tx.committed_write_Sum       5,722,936   9,154,393  10,313,563   5,932,215
+tx.committed_write-ps_Avg          112         106         119         168
+tx.committed_write-ps_Max          282         296         500         946
+tx.rollbacks_Sum                44,286      79,375     692,926   2,630,490
+tx.rollbacks-ps_Avg                  1           1           8          75
+tx.rollbacks-ps_Max                  5           4         188       1,180
+tx.rollbacks_read_Sum           17,062      31,306     625,500   1,299,065
+tx.rollbacks_read-ps_Avg             0           0           7          37
+tx.rollbacks_read-ps_Max             2           2         187         501
+tx.rollbacks_write_Sum          27,224      48,069      67,426   1,331,425
+tx.rollbacks_write-ps_Avg            1           1           1          38
+tx.rollbacks_write-ps_Max            4           4          39         818
+tx.terminated_Sum                    0           0          13          63
+tx.terminated-ps_Avg                 0           0           0           0
+tx.terminated-ps_Max                 0           0           0           1
+tx.terminated_read_Sum               0           0          12          63
+tx.terminated_read-ps_Avg            0           0           0           0
+tx.terminated_read-ps_Max            0           0           0           1
+tx.terminated_write_Sum              0           0           1           0
+tx.terminated_write-ps_Avg           0           0           0           0
+tx.terminated_write-ps_Max           0           0           0           0
+
+
+date                              2021-08-28    2021-08-29    2021-08-30    2021-08-31
+pgc.hit_ratio_Avg                          1             1             1             1
+pgc.hit_ratio_Max                          1             1             1             1
+pgc.page_faults_Sum                        0             0             0           365
+pgc.page_faults-ps_Avg                     0             0             0             0
+pgc.page_faults-ps_Max                     0             0             0             6
+pgc.hits_Sum                   1,275,528,121 2,043,851,734 2,712,281,109 1,320,990,490
+pgc.hits-ps_Avg                       24,981        23,656        31,392        37,443
+pgc.hits-ps_Max                       67,194        62,173       328,361       286,712
+pgc.flushes_Sum                       93,587       155,337       217,782       149,136
+pgc.flushes-ps_Avg                         2             2             3             4
+pgc.flushes-ps_Max                        27            27            77           539
+pgc.eviction_exceptions_Sum                0             0             0             0
+pgc.eviction_exceptions-ps_Avg             0             0             0             0
+pgc.eviction_exceptions-ps_Max             0             0             0             0
+pgc.evictions_Sum                          0             0             0             0
+pgc.evictions-ps_Avg                       0             0             0             0
+pgc.evictions-ps_Max                       0             0             0             0
+pgc.pins_Sum                   1,279,749,221 2,051,002,774 2,719,432,149 1,323,765,760
+pgc.pins-ps_Avg                       25,064        23,738        31,475        37,522
+pgc.pins-ps_Max                       67,277        62,255       328,444       286,791
+pgc.unpins_Sum                 1,275,526,523 2,043,849,870 2,709,943,547 1,319,013,351
+pgc.unpins-ps_Avg                     24,981        23,656        31,365        37,387
+pgc.unpins-ps_Max                     67,194        62,173       328,177       286,369
+
+
+date                            2021-08-28  2021-08-29  2021-08-30  2021-08-31
+ckp.events_Count                       851       1,440       1,440         588
+ckp.total_time_Sum                  61,663     108,048     136,697      80,956
+ckp.check_point_duration_Sum       860,282   1,502,417   1,736,674     702,081
+ckp.check_point_duration_Count         851       1,440       1,440         588
+ckp.check_point_duration_Avg         1,011       1,043       1,206       1,194
+ckp.check_point_duration_Max         1,221       4,247       2,641      12,611
+
+
+date                                    2021-08-28  2021-08-29  2021-08-30  2021-08-31
+vm.gc.count.g1_old_generation_Sum                0           0           0           0
+vm.gc.count.g1_old_generation_Avg                0           0           0           0
+vm.gc.count.g1_old_generation_Max                0           0           0           0
+vm.gc.count.g1_young_generation_Sum          3,125       5,103       4,867       1,872
+vm.gc.count.g1_young_generation-ps_Avg           0           0           0           0
+vm.gc.count.g1_young_generation-ps_Max           0           0           0           0
+vm.gc.time.g1_old_generation_Sum                 0           0           0           0
+vm.gc.time.g1_old_generation_Avg                 0           0           0           0
+vm.gc.time.g1_old_generation_Max                 0           0           0           0
+vm.gc.time.g1_young_generation_Sum         633,733   1,040,854     986,588     371,098
+vm.gc.time.g1_young_generation_Avg             745         723         685         631
+vm.gc.time.g1_young_generation_Max           1,984       2,065       2,136       1,774
+Total_GC_pause_time-ms_Sum                 633,733   1,040,854     986,588     371,098
+Total_GC_pause_time-ms_Avg                     745         723         685         631
+Total_GC_pause_time-ms_Max                   1,984       2,065       2,136       1,774
+
