@@ -16,7 +16,7 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 	[ -d | --display_precision     ]
 	[ -b | --bolt_port             ]
 	[ -v | --verbose               ]
-  [ -r | --admin_report_dir      ]
+        [ -r | --admin_report_dir      ]
 	[ -m | --metric      ]  < "store,"count","transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
