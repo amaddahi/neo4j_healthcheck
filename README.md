@@ -145,7 +145,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	dbms.logs.query.allocation_logging_enabled=true
 	dbms.logs.query.page_logging_enabled=true
 	dbms.logs.query.enabled=true
-	dbms.logs.query.threshold=0
+	dbms.logs.query.threshold=5
 	dbms.track_query_allocation=true
 	dbms.track_query_cpu_time=true
 	
@@ -156,7 +156,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	metrics.neo4j.counts.enabled=true
 	metrics.neo4j.network.enabled=true
 	metrics.csv.enabled=true
-	metrics.csv.interval=3s
+	metrics.csv.interval=60s
 	metrics.csv.rotation.size=10M
 	
 
@@ -180,44 +180,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	o sudo pip3 install configobj
 	o sudo pip3 install matplotlib
 
-#### Instructions to run the script:
 
-	1) Download the script
-	2) chmod +x neo4j_health
-	3) ensure the python along with its dependencies as outline above are installed
-	4) Run the script.   If [ -c | --checkdb ] option is optionally used, then ensure DB_USER, DB_PASSWD as well as
-	   NEO4J_HOME are also set.  The script does expect to run an analysis of stats in the metrics directory. 
-	   As such, cvs metrics also needs to have been enabled and contain some data for proper analysis.  
-	   By default, the script will look for the metrics directory in the current working directory, and if not found, 
-	   it will then look under the directory specified by NEO4j_HOME.
-	   
-#### To Run in Docker:
-
-         $docker build -t neo4j_health:latest -f Dockerfile .
-	 
-         $docker run                                                   \
-	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
-	 -v /tmp/metrics_plots:/app/metrics_plots                      \
-	 -v $NEO4J_HOME/metrics:/app/metrics                           \
-	 -v $NEO4J_HOME/logs:/app/logs                                 \
-	 -v $NEO4J_HOME/conf:/app/conf                                 \
-	 -v $NEO4J_HOME/bin:/app/bin                                   \
-	 -v $NEO4J_HOME/data:/app/data                                 \
-	 --host_ip=< NEO4J_INSTANCE_IP >                               \
-	 neo4j_health:latest                                           \
-	 -m page_cache -p 3 -i Min -c -b 7617 -v 
-	 
-	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
-	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
-	 non-default port.   Furthermore, the instance is running on host_ip address(can be determined by executing: 
-	 `curl ifconfig.co`.
-	 
-	 docker run                                    \
-	 -v <DIRPATH>/metrics:/app/metrics             \
-	 -v <DIRPATH>/metrics_plots:/app/metrics_plots \
-	 neo4j_health:latest  -m cypher -v
-	 
-	 #The above example only generates report/plots for the provide metrics.
 	 
 
 
