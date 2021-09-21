@@ -75,7 +75,7 @@ def main(argv):
             elif opt in ('-m', '--metric'):
                 metric_category = arg
                 #print(metric_category)
-                if metric_category not in ('count','query','operation','store',"transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation", "all","none"):
+                if metric_category not in ('count','query','operation','store',"transaction", "page_cache", "bolt", "causal_clustering", "cypher", "check_point", "object","network", "server", "jvm_gc", "jvm_memory", "jvm_memory2","jvm_thread", "log_rotation", "file_descriptors","all","none"):
                     print(" " )
                     print("ERROR: Incorrect parameter:" + arg)
                     print(" " )
@@ -168,7 +168,7 @@ def main(argv):
 
             #for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
             #for metric_type in ("object","transaction", "bolt", "cypher", "page_cache", "check_point", "server","jvm_gc" ):
-            for metric_type in ('count','store',"object","transaction",  "page_cache", "check_point", "jvm_gc" , "query"):
+            for metric_type in ('operation','count','store',"object","transaction",  "page_cache", "check_point", "jvm_gc" , "query"):
             #for metric_type in ("object","transaction",  "page_cache", "check_point", "jvm_gc" , "query"):
 
                 get_stats.run(start_date, end_date, metric_type,
@@ -178,8 +178,8 @@ def main(argv):
                   interval, periods, options)
 
         sys.stdout.flush()
-
-        convert_txt_pdf.run2()
+        
+        #convert_txt_pdf.run2()
 
 
 if __name__ == "__main__":
