@@ -194,4 +194,35 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	   it will then look under the directory specified by NEO4j_HOME.
 	   
 
+#### To Run in Docker:
+
+         $docker build [--no-cache] -t nj_perf:latest -f Dockerfile .
+	 
+	 $docker run -v /tmp/metrics/:/app/metrics -v /tmp/results:/app/results nj_perf:latest -c pan --database neo4j -p 3 -i D -m all
+	 
+	 $docker run -v /tmp/metrics/:/app/metrics -v /tmp/results:/app/results nj_perf:latest -c pan --database neo4j -p 3 -i D -m all
+	 
+         $docker run                                                   \
+	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
+	 -v /tmp/metrics_plots:/app/metrics_plots                      \
+	 -v $NEO4J_HOME/metrics:/app/metrics                           \
+	 -v $NEO4J_HOME/logs:/app/logs                                 \
+	 -v $NEO4J_HOME/conf:/app/conf                                 \
+	 -v $NEO4J_HOME/bin:/app/bin                                   \
+	 -v $NEO4J_HOME/data:/app/data                                 \
+	 --host_ip=< NEO4J_INSTANCE_IP >                               \
+	 nj_perf:latest                                           \
+	 -m page_cache -p 3 -i Min -c -b 7617 -v 
+	 
+	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
+	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
+	 non-default port.   Furthermore, the instance is running on host_ip address(can be determined by executing: 
+	 `curl ifconfig.co`.
+	 
+	 docker run                                    \
+	 -v <DIRPATH>/metrics:/app/metrics             \
+	 -v <DIRPATH>/results:/app/results \
+	 neo4j_health:latest  -m cypher -v
+	 
+	 #The above example only generates report/plots for the provide metrics.
 
