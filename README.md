@@ -58,30 +58,28 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
                -c demo  --database neo4j -p 3  -i D -m all
                
-               -c demo  --database test2 -p 3  -i D -m all  -r /home/ubuntu/customers/pan.4.2.x/12817/qa2-20210909/ZD12817_admin_report/1
+               -c demo  --database test2 -p 3  -i D -m all  -r <FullPathToAdminReport-Unzipped>
                
-               -c demo -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+               -c demo --database neo4j  -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
 	             # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
 		    
-               -c demo --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
+               -c demo --database neo4j  --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
                     # Report on ten individual days, starting on 2019-01-01
 
-               -c demo --interval D   --periods 7  --startdate 2019-01-01  --metric all
+               -c demo --database neo4j  --interval D   --periods 7  --startdate 2019-01-01  --metric all
                     # Report on seven individual days, starting on 2019-01-01
 
-               -c demo --interval D   --periods 7  --enddate 2019-01-01 --metric cypher
+               -c demo --database neo4j  --interval D   --periods 7  --enddate 2019-01-01 --metric cypher
                     # Report on seven individual days, starting on 2008-01-01
 
-               -c demo --interval W  --periods 4  --startdate 2019-01-01
+               -c demo --database neo4j  --interval W  --periods 4  --startdate 2019-01-01
                     # Report on four one-week periods
 
-               -c demo --interval W  --periods 4  --enddate 2019-01-01
+               -c demo --database neo4j  --interval W  --periods 4  --enddate 2019-01-01
                     # Report on four one-week periods
 
-               -c demo --interval Y -periods 2  --startdate 2018-01-01
-	       
-	       --checkdb -metric none
-	       
+               -c demo --database neo4j  --interval Y -periods 2  --startdate 2018-01-01
+	   	       
 	    
 	       
 	       
