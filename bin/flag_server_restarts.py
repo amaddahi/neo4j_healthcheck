@@ -6,7 +6,7 @@ import time
 def run():
     #filenames = get_filenames("server")
     # it appears as of 4.2.x, server files are missing, so we will use 1st bolt csv file for this purpose
-    filenames = get_filenames.run("bolt")
+    filenames = get_filenames.run("object")
     for file in filenames:
         metrics_file = globals.metrics_directory + "/" + file[0]
 

@@ -2,6 +2,8 @@ from bin import globals
 from bin import delete_tmpfile
 import pytz
 import matplotlib.pyplot as plt
+import warnings
+
 import pandas as pd
 import numpy as np
 import sys
@@ -23,6 +25,7 @@ import matplotlib.pyplot as plt
 
 def run():
 
+   warnings.simplefilter(action='ignore', category=FutureWarning)
    # save FPDF() class into
    # a variable pdf
    pdf = FPDF()
@@ -48,6 +51,7 @@ def run():
 
 def run2():
 
+       warnings.simplefilter(action='ignore', category=FutureWarning)
        # save FPDF() class into a variable pdf
        pdf = FPDF()
     
@@ -78,7 +82,6 @@ def run2():
     
        #globals.pp.close()
     
-
        import glob
 
        m_pdf_file_path= globals.results_directory + "/m_*.pdf"

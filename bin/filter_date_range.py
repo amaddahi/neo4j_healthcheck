@@ -1,4 +1,6 @@
 from bin import globals
+import warnings
+
 import pandas as pd
 
 def run(start_date, end_date, df, interval, periods, options, check_point_duration):
@@ -6,6 +8,8 @@ def run(start_date, end_date, df, interval, periods, options, check_point_durati
     #
     # if no options are specified, gather stats for the last 24 hours with available data
     #
+
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
     start_date_min = df.date.min()
     end_date_max = df.date.max()

@@ -3,9 +3,12 @@ from bin import get_metric_category_abbr
 from bin import get_filenames
 import re
 import numpy as np
+import warnings
+
 
 def run(interval, df, df_org, metric_category):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     #print(list(df))
 
     filenames = get_filenames.run(metric_category)

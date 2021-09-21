@@ -7,6 +7,7 @@ def initialize():
 
 
     global host_ip
+    global category_file_exists
     global db_user
     global db_pwd
     global neo4j_home
@@ -19,6 +20,7 @@ def initialize():
     global results_directory
     global results_file_txt
     global results_file_pdf
+    global results_file_html
     global docker
     global metrics_csv_interval
     global all_csv_filename
@@ -34,9 +36,12 @@ def initialize():
     global pp
     global fo
     global combined_results_plot_pdf
+    global combined_results_plot_html
     global plot_file_pdf
     global long_running_query_file 
     global long_running_query_sorted_file 
+    global error_log 
+    global timestamp
 
     version = '2.0'
     verbose = False
@@ -59,6 +64,7 @@ def initialize():
     data_directory = None
     admin_report_directory= None 
     results_directory = None
+    error_log = "error.log"
     results_file_txt = None
     results_file_pdf = None
     docker = None

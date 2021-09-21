@@ -2,10 +2,13 @@ from bin import globals
 from bin import get_metric_category_abbr
 from bin import get_filenames
 import re
+import warnings
+
 import pandas as pd
 
 def run(interval, df, metric_category):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     filenames = get_filenames.run(metric_category)
 
     if globals.debug:

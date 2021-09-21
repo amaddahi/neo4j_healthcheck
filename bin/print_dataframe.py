@@ -1,9 +1,12 @@
 from bin import globals
+import warnings
+
 import sys
 import pandas as pd
 
 def run2(df,msg):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     #global display_precision
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 700)
@@ -40,6 +43,8 @@ def run2(df,msg):
 
 
 def run(df):
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     #global display_precision
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 700)
@@ -54,6 +59,8 @@ def run(df):
 
 
 def print_dataframe(df):
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     pd.set_option('display.max_rows', 500)
     pd.set_option('display.max_columns', 700)
     pd.set_option('display.width', 1000)

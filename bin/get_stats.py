@@ -1,10 +1,15 @@
+
 from bin import globals
 from bin import normalize_stats
+from bin import get_filenames
 from bin import apply_output_projection
 from bin import print_dataframe
 from bin import plot_metric
+from bin import convert_txt_pdf
 from bin import pre_process_files
 from bin import get_admin_report_env
+import warnings
+
 import os
 from bin import usage
 from bin import filter_date_range
@@ -15,11 +20,13 @@ import numpy as np
 
 def run(start_date, end_date, metric_category, interval, periods, options):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     print (" ")
     print ("###################################################################")
     print (" ")
     msg= "Summarizing Stats:  " + metric_category
 
+    globals.category_file_exists=1
     # TODO
     if metric_category == 'network':
        #for file in os.listdir(metrics_directory):
@@ -52,6 +59,11 @@ def run(start_date, end_date, metric_category, interval, periods, options):
                return
     else:
        print(msg)
+
+    # skip category processing if no matching files found (i.e metric category not turned ON)
+    globals.category_file_exists=len(get_filenames.run(metric_category))
+    if globals.category_file_exists == 0:
+        return
 
     print (" ")
     print (" ")
@@ -152,3 +164,4 @@ def run(start_date, end_date, metric_category, interval, periods, options):
 
     plot_metric.run(df, metric_category)
 
+    convert_txt_pdf.run2()

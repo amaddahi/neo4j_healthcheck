@@ -1,5 +1,6 @@
 
 
+import warnings
 from bin import globals
 from bin import print_dataframe
 from bin import plot_metric
@@ -14,6 +15,8 @@ import matplotlib.pyplot as plt
 
 def run():
 
+
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
     globals.working_directory = os.getcwd()
     globals.metrics_directory = globals.admin_report_directory + "/metrics"
@@ -51,6 +54,8 @@ def run():
 
 def admin_report_check():
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     #if globals.logs_directory is not None:
         #run_shell.run("grep 'Operating System' " + globals.logs_directory + "/debug.log | head -1","Host Operating System + Number of cpu cores",1)
 
@@ -87,6 +92,8 @@ def admin_report_check():
 
 def plot_long_running_queries(metric_category):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
+
     #filenames = get_filenames.run(metric_category)
 
     #
@@ -109,6 +116,7 @@ def plot_long_running_queries(metric_category):
 
 def get_and_print_debug_errors():
 
+        warnings.simplefilter(action='ignore', category=FutureWarning)
 
         error_keep_list=["Deprecated index providers","Caused by","o.n.c.c.c.RaftMachine", "o.n.c.c.c.s.RaftState","o.n.c.c.c.s.RaftLogShipper","o.n.c.c.c.m.RaftMembershipChanger","o.n.c.c.c.m.RaftMembershipManager","o.n.c.m.RaftOutbound","o.n.k.i.c.MonitorGc","o.n.c.d.HazelcastCoreTopologyService","o.n.c.c.c.m.MembershipWaiterLifecycle","o.n.k.AvailabilityGuard","o.n.i.p.PageCache","o.n.c.i.ClusterBinder","o.n.k.i.DatabaseHealth","o.n.c.c.s.s.CoreStateDownloader","o.n.c.c.IdentityModule","GetOperation","ERROR","WARN","o.n.k.i.f.GraphDatabaseFacadeFactory"]
 
@@ -150,6 +158,8 @@ def get_and_print_debug_errors():
 
 
 def print_top_long_running_queries():
+
+        warnings.simplefilter(action='ignore', category=FutureWarning)
 
         print_dataframe.run2(0,"###################################################################")
         print_dataframe.run2(0, " ")

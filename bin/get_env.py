@@ -25,13 +25,14 @@ def initialize():
     globals.conf_directory = os.environ.get('CONF_DIR')  # EXPORT CONF_DIR
 
     t = time.localtime()
-    timestamp = time.strftime('%b-%d-%Y_%H%M', t)
-
-    globals.results_directory=globals.working_directory + "/results/" + globals.customer + "/" + globals.customer + "-healthcheck_results-" + timestamp
+    globals.timestamp = time.strftime('%b-%d-%Y_%H%M', t)
+    
+    globals.results_directory=globals.working_directory + "/results/" + globals.customer + "/" + globals.customer + "-healthcheck_results-" + globals.timestamp
     globals.results_file_txt=globals.results_directory + "/" + globals.customer + "_results.txt"
     globals.results_file_pdf=globals.results_directory + "/" + globals.customer + "_results.pdf"
     globals.combined_results_plot_pdf=globals.results_directory + "/" + globals.customer + "_results_w_plots.pdf"
 
+    globals.error_log = globals.results_directory + "/" + globals.error_log + "-" + globals.timestamp
 
     if not os.path.isdir(globals.results_directory):
         os.makedirs(globals.results_directory)

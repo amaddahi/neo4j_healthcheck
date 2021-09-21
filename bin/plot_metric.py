@@ -1,6 +1,7 @@
 from bin import globals
 from bin import get_filenames
 from bin import get_plot_group
+from bin import print_log
 from bin import check_min_max
 from matplotlib.backends.backend_pdf import PdfPages
 import matplotlib.pyplot as plt
@@ -9,6 +10,8 @@ import matplotlib
 
 def run(df, metric_category):
 
+    import warnings 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     SMALL_SIZE = 5
     MEDIUM_SIZE = 10
     BIGGER_SIZE = 12
@@ -41,6 +44,7 @@ def run(df, metric_category):
             print("---------------------------------------")
 
         pdf_filename = globals.results_directory + "/m_" + metric_category + ".pdf"
+        html_filename = globals.results_directory + "/m_" + metric_category + ".html"
 
         #with PdfPages(metric_category + ".pdf") as pdf:
 
@@ -59,13 +63,19 @@ def run(df, metric_category):
                 # Skip the plotting for this metric - means no input file was found earlier
                 #
                 if not plot_keep_list:
-                   print(df)
-                   print ("No input file out???")
-                   print(df)
+                   print (" ")
+                   print_log.run(1,"WARN: Inside plot_metrics: No input file out for metric_category( " + metric_category + ")")
+                   #print(df)
                    continue
 
                 plot_delete_list = list(set(column_names) - set(plot_keep_list))
 
+                import sys
+
+                if not sys.warnoptions:
+                    import warnings
+                    warnings.simplefilter(action='ignore', category=FutureWarning)
+                    #warnings.simplefilter("ignore")
 
                 if metric_category=='query':
                     df_plot=df
@@ -73,12 +83,22 @@ def run(df, metric_category):
                 else:
                     df_plot = df.drop(plot_delete_list, 1, errors='ignore')
                     df_plot.plot()
+
+                #write html to file
+                df_html=df.T.to_html()
+                html_file=open(html_filename, "w")
+                html_file.write(df_html)
+                html_file.close()
+
                 plt.title(metric_category)
                 pdf.savefig()
                 plt.close()
 
 
+
 def run2(df,metric_category):
+
+    warnings.simplefilter(action='ignore', category=FutureWarning)
 
     import matplotlib
     import matplotlib.pyplot as plt

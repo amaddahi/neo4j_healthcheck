@@ -55,6 +55,9 @@ def run(file_type):
     elif file_type == "jvm_thread":
         metric_category_abbr = "thr."
         db_category_abbr = "vm."
+    elif file_type == "fd":
+        metric_category_abbr = "fd"
+        db_category_abbr = "vm."
     elif file_type == "count":
         metric_category_abbr = "neo4j."
         db_category_abbr = "count."

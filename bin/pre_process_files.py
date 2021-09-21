@@ -1,4 +1,6 @@
 from bin import globals
+import warnings
+
 from bin import get_filenames
 from bin import merge_csv_files
 from bin import convert_epoch_to_timestamp
@@ -10,6 +12,7 @@ import pandas as pd
 
 def run(start_date, end_date, metric_category):
 
+    warnings.simplefilter(action='ignore', category=FutureWarning)
     df2=False
     filenames = get_filenames.run(metric_category)
 

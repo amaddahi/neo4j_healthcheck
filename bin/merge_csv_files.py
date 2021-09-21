@@ -49,7 +49,7 @@ def run(filenames, metric_category):
         # differentiate between database specific metrics and the rest where metric name is <neo4j.dbname.metric>
 
         dot_count=file[0].count(".")
-        if metric_category in ('count','operation','transaction','object','cypher','log_rotation','check_point','jvm_thread'):
+        if metric_category in ('count','operation','transaction','object','cypher','log_rotation','check_point','jvm_thread','file_descriptors'):
                 file_type = file[0].split('.')[dot_count-2]    #  Assumes neo4j. + database + .category + .csv ( neo4j. + dbname + .ids_in_use.node + .csv)
         elif metric_category in ('store','jvm_gc'):
                 file_type = file[0].split('.')[dot_count-3]    #  Assumes neo4j. + database + .category        ( neo4j.   dbname + .store.size.total.csv )
@@ -64,6 +64,8 @@ def run(filenames, metric_category):
 
         if file_type == "thread":
             file_type = "jvm_thread"
+        elif file_type == "descriptors":
+            file_type = "fd"
         elif file_type == "memory":
             file_type = "jvm_memory"
         elif file_type == "gc":
