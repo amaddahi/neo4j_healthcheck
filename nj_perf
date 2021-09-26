@@ -36,7 +36,7 @@ def main(argv):
             'query','admin_report_directory=','database=','debug','host_ip=','interval=', 'customer=', 'periods=', 'startdate=', 'enddate=', 'outfile=', 'metric=', 'port=', 'bolt_port=', 'checkdb', 'display_precision', 'verbose', 'help'])
 
     except getopt.GetoptError:
-        usage('')
+        usage.run('')
     else:
         for opt, arg in opts:
             if opt in ('-h', '--help'):
@@ -168,7 +168,7 @@ def main(argv):
 
             #for metric_type in ("object","transaction", "bolt", "page_cache", "cypher", "check_point", "network", "server", "jvm_gc", "jvm_memory", "jvm_thread", "log_rotation","causal_clustering"):
             #for metric_type in ("object","transaction", "bolt", "cypher", "page_cache", "check_point", "server","jvm_gc" ):
-            for metric_type in ('operation','count','store',"object","transaction",  "page_cache", "check_point", "jvm_gc" , "query"):
+            for metric_type in ('operation','count','store',"object","transaction", "bolt",  "cypher","page_cache", "check_point", "jvm_gc" , "query"):
             #for metric_type in ("object","transaction",  "page_cache", "check_point", "jvm_gc" , "query"):
 
                 get_stats.run(start_date, end_date, metric_type,
