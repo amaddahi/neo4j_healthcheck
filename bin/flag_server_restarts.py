@@ -1,6 +1,7 @@
 from bin import globals
 from bin import get_filenames
 import time
+from bin import print_dataframe
 
 
 def run():
@@ -19,10 +20,13 @@ def run():
     lines = f.readlines()
     f.close()
 
-    print ("###################################################################")
-    print (" ")
-    print ("Database Restarts: ")
-    print (" ")
+    msgx="################################################" + "\n"
+    msg= "Database Restarts: "
+
+    #print ("###################################################################")
+    #print (" ")
+    #print ("Database Restarts: ")
+    #print (" ")
 
     timestamp_cur=0
     timestamp_prev=0
@@ -36,7 +40,8 @@ def run():
         if flag_start is True:
             restart_timestamp=int(line.split(',')[0])
             converted_restart_timestamp=time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(restart_timestamp))
-            print(converted_restart_timestamp)
+            #print(converted_restart_timestamp)
+            print_dataframe.run2(0, "\n" + msgx + " \n" + msg + converted_restart_timestamp + " \n ")
             flag_start=False
         if "t," in line:
             flag_start=True

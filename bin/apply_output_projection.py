@@ -115,4 +115,6 @@ def run(df,metric_category):
             #print (label + "   " + label.replace(pattern_max,'_Max'))
 
 
+        for label in list(df_output):
+            df_output.rename(columns={label:label.ljust(50," ")}, inplace=True)
         return df_output

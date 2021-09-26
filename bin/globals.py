@@ -42,6 +42,8 @@ def initialize():
     global long_running_query_sorted_file 
     global error_log 
     global timestamp
+    global search_start_time
+    global search_end_time
 
     version = '2.0'
     verbose = False

@@ -67,6 +67,7 @@ def admin_report_check():
     if globals.logs_directory is not None:
         os.system("cd " + globals.logs_directory + ";" + "ls -1v  " + globals.logs_directory  + "/query.log* | xargs cat > " +  globals.long_running_query_file )
         os.system("grep INFO  " + globals.long_running_query_file + " | sort -k4nr,4  | cut -c1-280  > " + globals.long_running_query_sorted_file)
+        os.system("gzip globals.long_running_query_file ")
         os.system("head -1000 " + globals.long_running_query_sorted_file + " | grep INFO | cut -c1-16 > /tmp/q1")
         os.system("head -1000 " + globals.long_running_query_sorted_file + " | grep INFO | cut -c36-40 > /tmp/q2")
         os.system("echo 't,duration'  > /tmp/qqq ")

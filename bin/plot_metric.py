@@ -1,4 +1,6 @@
 from bin import globals
+import warnings
+import re
 from bin import get_filenames
 from bin import get_plot_group
 from bin import print_log
@@ -10,7 +12,6 @@ import matplotlib
 
 def run(df, metric_category):
 
-    import warnings 
     warnings.simplefilter(action='ignore', category=FutureWarning)
     SMALL_SIZE = 5
     MEDIUM_SIZE = 10
@@ -51,13 +52,22 @@ def run(df, metric_category):
         with PdfPages(pdf_filename) as pdf:
 
 
+            # matching string to match metric category to plot
+            #
             for plot_x in plot_group:
                 # print ("GRAPH: " + str(i))
                 # i=1
                 plot_keep_list = []
                 for item in plot_x:
                     for col in column_names:
-                        if item in col:
+                        #print ("metric_column: " + col) 
+                        #print ("string-to-match: " + item) 
+                        #if item in col:
+                        if re.search(item,col):
+                            #if re.search(r'committed(.*?)Max',col).group(1):
+                            #if re.search(r'committed(.*?)Max',col):
+                                #print ("Matched>>>>>>>>>>>>>>>>>Max")
+                            #print ("Matched^^^^^")
                             plot_keep_list.append(col)
 
                 # Skip the plotting for this metric - means no input file was found earlier
@@ -70,12 +80,6 @@ def run(df, metric_category):
 
                 plot_delete_list = list(set(column_names) - set(plot_keep_list))
 
-                import sys
-
-                if not sys.warnoptions:
-                    import warnings
-                    warnings.simplefilter(action='ignore', category=FutureWarning)
-                    #warnings.simplefilter("ignore")
 
                 if metric_category=='query':
                     df_plot=df
@@ -116,7 +120,7 @@ def run2(df,metric_category):
     #matplotlib.rc('font', size=SMALL_SIZE)
     #matplotlib.rc('axes', titlesize=SMALL_SIZE)
 
-    df = pd.read_csv("/tmp/qqq.all")
+    df = pd.read_csv("/tmp/qqq")
 
     df['t'] = pd.to_datetime(df['t'], format="%Y-%m-%d %H:%M")
     #print(df.head(5))

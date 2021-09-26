@@ -4,8 +4,17 @@ def run(metric_category):
     if metric_category == 'transaction':
         plot_group = [
             ["peak_concurrent"],
-            ["active", "started"],
-            ["committed", "rollbacks"],
+            ["active"],
+            ["started" ],
+            ['started(.*?)(Avg|Max)'],
+            ['committed(.*?)Sum'],
+            ['committed(.*?)(Avg|Max)'],
+            ['committed(.*?)ps_Avg'],
+            ['committed(.*?)ps_Max'],
+            ["rollbacks"],
+            ['rollbacks(.*?)ps_Sum'],
+            ['rollbacks(.*?)ps_Avg'],
+            ['rollbacks(.*?)ps_Max'],
             ["terminated"]
         ]
     elif metric_category == 'query':

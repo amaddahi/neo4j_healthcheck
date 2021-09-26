@@ -62,6 +62,9 @@ def run(start_date, end_date, df, interval, periods, options, check_point_durati
             delta = str(periods)+"Y"
         end_date = pd.Timestamp(start_date) + pd.to_timedelta(delta)
 
+    globals.search_start_time=start_date
+    globals.search_end_time=end_date
+
     if not check_point_duration:
           print ('min_startdate:           ', pd.Timestamp(start_date_min))
           print ('max_enddate:             ', pd.Timestamp(end_date_max))

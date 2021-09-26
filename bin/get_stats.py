@@ -21,9 +21,7 @@ import numpy as np
 def run(start_date, end_date, metric_category, interval, periods, options):
 
     warnings.simplefilter(action='ignore', category=FutureWarning)
-    print (" ")
-    print ("###################################################################")
-    print (" ")
+    msgx="################################################" + "\n"
     msg= "Summarizing Stats:  " + metric_category
 
     globals.category_file_exists=1
@@ -32,24 +30,24 @@ def run(start_date, end_date, metric_category, interval, periods, options):
        #for file in os.listdir(metrics_directory):
            #if fnmatch.fnmatch(file, "*causal_clustering*"):
                msg = msg + "  --> Collected for HA clusters only"
-               print(msg)
+               print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
                return
     elif metric_category == 'check_point':
                msg = msg + "(ms)"  
-               print(msg)
+               print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
                #return
     elif metric_category == 'store':
                msg = msg + "(MB)"  
-               print(msg)
-               #return
+               print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
     elif metric_category == 'query':
                msg="Long Running Queries"
-               print(msg)
+               print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
                if (globals.admin_report_directory != None ):
                    get_admin_report_env.run()
                    get_admin_report_env.admin_report_check()
                else:
-                   print("\n" + "Note:  Will not run list of long running queries as Admin Report Directory Not Provided" + "\n")
+                   msg = "\n" + "Note:  Will not run list of long running queries as Admin Report Directory Not Provided" + "\n"
+                   print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
                    #usage.run("query")
                return
 
@@ -58,7 +56,7 @@ def run(start_date, end_date, metric_category, interval, periods, options):
                dbms_mode='CORE'
                return
     else:
-       print(msg)
+       print_dataframe.run2(0, "\n" + msgx + " \n" + msg + " \n ")
 
     # skip category processing if no matching files found (i.e metric category not turned ON)
     globals.category_file_exists=len(get_filenames.run(metric_category))
