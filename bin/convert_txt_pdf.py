@@ -33,6 +33,7 @@ def run():
    # Add a page
    pdf.add_page()
 
+
    # set style and size of font
    # that you want in the pdf
    pdf.set_font("Courier", size = 5)
@@ -48,13 +49,48 @@ def run():
    pdf.output(results_file_pdf)
 
 
+def add_title_page():
+     
+      pdf = FPDF()
+      pdf.add_page()
+
+      pdf.image('resources/neo4j.png', 10, 40, 191)
+
+      pdf.set_font('Arial', 'B', 25)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,10, ' ',0,1)
+      pdf.cell(40,5, ' ',0,1)
+      pdf.cell(40,8, 'Neo4j Performance Summary Report',0,1)
+      pdf.set_font('Arial', 'B', 18)
+      pdf.cell(40,8,globals.customer,0,1)
+      #pdf.cell(40,8,' ',0,1)
+      pdf.set_font('Arial', 'B', 12)
+      pdf.cell(40,8,time.strftime('%Y-%m-%d',time.localtime()),0,1)
+      pdf.output('/tmp/title_page.pdf', 'F')
+      pdf.close()
 
 def run2():
+
+       add_title_page()
 
        warnings.simplefilter(action='ignore', category=FutureWarning)
        # save FPDF() class into a variable pdf
        pdf = FPDF()
-    
+   
        # Add a page
        pdf.add_page()
     
@@ -62,7 +98,6 @@ def run2():
        #pdf.set_fill_color(r=220, g=220, b=220)
        pdf.set_font("Courier", size = 5)
     
-   
        #print(">>>>>In convert_txt_pdf - result_file_txt:" + globals.results_file_txt )
        #print(">>>>>In convert_txt_pdf - results_file_pdf:" + globals.results_file_pdf )
        #print(">>>>>In convert_txt_pdf - combined_results_plot_pdf:" + globals.combined_results_plot_pdf)
@@ -92,6 +127,7 @@ def run2():
 
        merger = PdfFileMerger()
    
+       merger.append("/tmp/title_page.pdf")
        merger.append(globals.results_file_pdf)
 
        for pdf in m_pdf_files:
