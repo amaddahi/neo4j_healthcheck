@@ -8,11 +8,14 @@ def run(df,metric_category):
              print ("-----------------------------------------")
 
         if metric_category == 'check_point':
-            output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
+            #output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
+            output_keep_list = ['ckp.total_time_Sum', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
+            #output_keep_list = ['ckp.events_Count', 'ckp.total_time_Sum', 'ckp.check_point_duration_Sum', 'ckp.check_point_duration_Count', 'ckp.check_point_duration_Avg', 'ckp.check_point_duration_Max']
         elif metric_category == 'causal_clustering':
             output_keep_list = ['cc.catchup.tx_pull_requests_received_Sum', 'cc.catchup.tx_pull_requests_received_Avg', 'cc.catchup.tx_pull_requests_received_Max' , 'cc.core.append_index_Sum', 'cc.core.append_index_Avg', 'cc.core.append_index_Max', 'cc.core.commit_index_Sum', 'cc.core.commit_index_Avg', 'cc.core.commit_index_Max', 'cc.core.in_flight_cache.element_count_Sum', 'cc.core.in_flight_cache.element_count_Avg', 'cc.core.in_flight_cache.element_count_Max', 'cc.core.in_flight_cache.hits_Sum', 'cc.core.in_flight_cache.hits_Avg', 'cc.core.in_flight_cache.hits_Max', 'cc.core.in_flight_cache.max_bytes_Sum', 'cc.core.in_flight_cache.max_bytes_Avg', 'cc.core.in_flight_cache.max_bytes_Max', 'cc.core.in_flight_cache.max_elements_Sum', 'cc.core.in_flight_cache.max_elements_Avg', 'cc.core.in_flight_cache.max_elements_Max' , 'cc.core.in_flight_cache.misses_Sum', 'cc.core.in_flight_cache.misses_Avg', 'cc.core.in_flight_cache.misses_Max', 'cc.core.in_flight_cache.total_bytes_Sum', 'cc.core.in_flight_cache.total_bytes_Avg', 'cc.core.in_flight_cache.total_bytes_Max', 'cc.core.is_leader_Sum', 'cc.core.is_leader_Avg', 'cc.core.is_leader_Max', 'cc.core.leader_not_found_Sum', 'cc.core.leader_not_found_Avg', 'cc.core.leader_not_found_Max', 'cc.core.message_processing_delay_Sum', 'cc.core.message_processing_delay_Avg', 'cc.core.message_processing_delay_Max', 'cc.core.message_processing_timer.append_entries_request_Sum', 'cc.core.message_processing_timer.append_entries_request_Avg', 'cc.core.message_processing_timer.append_entries_request_Max', 'cc.core.message_processing_timer.append_entries_response_Sum' , 'cc.core.message_processing_timer.append_entries_response_Avg', 'cc.core.message_processing_timer.append_entries_response_Max', 'cc.core.message_processing_timer_Sum'  , 'cc.core.message_processing_timer_Avg', 'cc.core.message_processing_timer_Max', 'cc.core.message_processing_timer.election_timeout_Sum', 'cc.core.message_processing_timer.election_timeout_Avg', 'cc.core.message_processing_timer.election_timeout_Max', 'cc.core.message_processing_timer.heartbeat_Sum', 'cc.core.message_processing_timer.heartbeat_Avg', 'cc.core.message_processing_timer.heartbeat_Max', 'cc.core.message_processing_timer.heartbeat_response_Sum', 'cc.core.message_processing_timer.heartbeat_response_Avg', 'cc.core.message_processing_timer.heartbeat_response_Max', 'cc.core.message_processing_timer.heartbeat_timeout_Sum', 'cc.core.message_processing_timer.heartbeat_timeout_Avg', 'cc.core.message_processing_timer.heartbeat_timeout_Max', 'cc.core.message_processing_timer.log_compaction_info_Sum', 'cc.core.message_processing_timer.log_compaction_info_Avg', 'cc.core.message_processing_timer.log_compaction_info_Max', 'cc.core.message_processing_timer.new_batch_request_Sum', 'cc.core.message_processing_timer.new_batch_request_Avg', 'cc.core.message_processing_timer.new_batch_request_Max', 'cc.core.message_processing_timer.new_entry_request_Sum', 'cc.core.message_processing_timer.new_entry_request_Avg', 'cc.core.message_processing_timer.new_entry_request_Max', 'cc.core.message_processing_timer.pre_vote_request_Sum', 'cc.core.message_processing_timer.pre_vote_response_Sum', 'cc.core.message_processing_timer.prune_request_Sum', 'cc.core.message_processing_timer.prune_request_Avg', 'cc.core.message_processing_timer.prune_request_Max', 'cc.core.message_processing_timer.vote_request_Sum', 'cc.core.message_processing_timer.vote_response_Sum', 'cc.core.replication_attempt_Sum', 'cc.core.replication_attempt_Avg', 'cc.core.replication_attempt_Max', 'cc.core.replication_fail_Sum', 'cc.core.replication_fail_Avg', 'cc.core.replication_fail_Max', 'cc.core.replication_new_Sum', 'cc.core.replication_new_Avg', 'cc.core.replication_new_Max', 'cc.core.replication_success_Sum', 'cc.core.replication_success_Avg', 'cc.core.replication_success_Max', 'cc.core.term_Sum', 'cc.core.term_Avg', 'cc.core.term_Max', 'cc.core.tx_retries_Sum', 'cc.core.tx_retries_Avg', 'cc.core.tx_retries_Max']
         elif metric_category == 'cypher':
-            output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
+            #output_keep_list = ['cyp.replan_events-ps_Sum', 'cyp.replan_events-ps_Avg', 'cyp.replan_events-ps_Max', 'cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
+            output_keep_list = ['cyp.replan_wait_time_Sum', 'cyp.replan_wait_time_Count','cyp.replan_wait_time_Avg', 'cyp.replan_wait_time_Max']
         elif metric_category == 'server':
             output_keep_list = ['srv.threads.jetty.all_Avg', 'srv.threads.jetty.all_Max', 'srv.threads.jetty.idle_Avg', 'srv.threads.jetty.idle_Max']
         elif metric_category == 'log_rotation':
@@ -73,11 +76,11 @@ def run(df,metric_category):
               print("OUTPUT_DELETE_LIST: ", output_delete_list )
               print ("DF AFTER apply projection")
               print (df_output.T)
+              df_output.T.to_csv(metric_category + "_12_apply_output_before_processing.csv")
 
         for label in list(df_output):
             if globals.debug:
-                 print ("LABELS---->")
-                 print (label)
+                 print ("LABELS---->" + label)
                  print (" ")
             pattern_sum='-ps_Sum'
             pattern_count='-ps_Count'
@@ -86,10 +89,15 @@ def run(df,metric_category):
             pattern_cc_message='core.message_processing'
             pattern_cc_core='cc.core'
 
-            if globals.debug:
-                print(label)
+            #if globals.debug:
+                #print(label)
 
-            if pattern_sum in label:
+            if ((pattern_sum in label) and (metric_category != 'cypher')):
+                #if globals.debug:
+                      #print('--------')
+                      #print(label)
+                      #print(df_output[label])
+                      #print(globals.metrics_csv_interval)
                 df_output[label] = df_output[label]*globals.metrics_csv_interval
                 df_output.rename(columns={label: label.replace(
                      pattern_sum, '_Sum')}, inplace=True)
@@ -117,4 +125,9 @@ def run(df,metric_category):
 
         for label in list(df_output):
             df_output.rename(columns={label:label.ljust(50," ")}, inplace=True)
+
+        if globals.debug:
+              print ("DF after apply projection")
+              print (df_output.T)
+              df_output.T.to_csv(metric_category + "_13_apply_output_after_processing.csv")
         return df_output

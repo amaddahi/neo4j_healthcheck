@@ -26,7 +26,7 @@ def run2(df,msg):
     # TODO: Add results_directory to full path
     with open(globals.results_file_txt, 'a') as globals.fo:
            #if 00instance(df, pd.DataFrame):
-           if isinstance(df, pd.DataFrame):
+           if isinstance(df, pd.DataFrame):  # checking if we are printing a df or regular text
               globals.fo.write('\n')
               globals.fo.write(df.__repr__())
               globals.fo.write('\n')

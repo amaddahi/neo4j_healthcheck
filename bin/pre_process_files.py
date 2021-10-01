@@ -42,7 +42,7 @@ def run(start_date, end_date, metric_category):
     os.system("rm " + filetmp)
 
     if globals.debug:
-        df.to_csv(metric_category + "_0.csv")
+        df.to_csv(metric_category + "_0_pre_proces_before_convert_epoch_to_ts.csv")
 
     #
     # Change epoch to UTC timestamp
@@ -52,7 +52,7 @@ def run(start_date, end_date, metric_category):
         df2 = convert_epoch_to_timestamp.run(df2, 'UTC')
 
     if globals.debug:
-        df.to_csv(metric_category + "_1.csv")
+        df.to_csv(metric_category + "_1_pre_process_after_convert_epoch_to_ts.csv")
 
 
     #
@@ -63,7 +63,7 @@ def run(start_date, end_date, metric_category):
         df2 = df2.dropna()
 
     if globals.debug:
-        df.to_csv(metric_category + "_2.csv")
+        df.to_csv(metric_category + "_2_pre_process_after_dropping_mismatched_endates.csv")
 
     if check_point_duration_metric_filetmp:
        #return df,df2

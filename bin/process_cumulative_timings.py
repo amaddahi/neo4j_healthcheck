@@ -15,6 +15,10 @@ def run(interval, df, df_org, metric_category):
 
     (metric_category_abbr, db_category_abbr) = get_metric_category_abbr.run(metric_category)
 
+    if globals.debug:
+        print("Inside cumulative timing....")
+        print(" ")
+
     for file in filenames:
         #if metric_category in ('cypher'):
         if metric_category in ('cypher','jvm_gc','check_point'):
@@ -29,7 +33,7 @@ def run(interval, df, df_org, metric_category):
         # val_label = re.sub('metrics/','', x2)
         val_label = val_label + file[2]
 
-        if file[1] == 2:
+        if file[1] == 2:   # Example: ["neo4j." + globals.database + ".check_point.total_time.csv", 2, "", "neo4j.check_point.total_time.csv"]
 
             df[val_label] = np.ceil(df[val_label].diff()).fillna(0)
 
@@ -43,4 +47,9 @@ def run(interval, df, df_org, metric_category):
             df[val_label][df[val_label] < 0] = 0
 
     df = df.dropna()
+
+    if globals.debug:
+        print("Exiting cumulative timing....")
+        print(" ")
+
     return df

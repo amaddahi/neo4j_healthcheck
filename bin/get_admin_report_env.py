@@ -6,6 +6,7 @@ from bin import print_dataframe
 from bin import plot_metric
 from bin import run_shell
 import time, os, fnmatch
+import re
 import pandas as pd
 from fpdf import FPDF
 from PyPDF2 import PdfFileMerger
@@ -66,8 +67,36 @@ def admin_report_check():
 
     if globals.logs_directory is not None:
         os.system("cd " + globals.logs_directory + ";" + "ls -1v  " + globals.logs_directory  + "/query.log* | xargs cat > " +  globals.long_running_query_file )
-        os.system("grep INFO  " + globals.long_running_query_file + " | sort -k4nr,4  | cut -c1-280  > " + globals.long_running_query_sorted_file)
-        os.system("gzip globals.long_running_query_file ")
+
+        startDate=globals.search_start_time
+        #print(startDate)
+
+        endDate=globals.search_end_time
+
+        #print("----------------")
+        #print(startDate)
+        #print(endDate)
+        #print("----------------")
+
+        date_re = re.compile(r'(\d+-\d+-\d+ \d+:\d+:\d+)')
+
+        os.system("rm /tmp/filtered_query_file")
+        with open("/tmp/filtered_query_file", "a") as fw:
+           with open(globals.long_running_query_file, "r") as fh:
+
+             for line in fh.readlines():
+                match = date_re.search(line)
+                if match:
+                  matchDate = match.group(1)
+                  #print(matchDate)
+                  if matchDate >= str(startDate) and matchDate <= str(endDate):
+                     #print (match.string.strip())
+                     fw.write(match.string.strip())
+                     fw.write("\n")
+
+        #os.system("grep INFO  " + globals.long_running_query_file + " | sort -k4nr,4  | cut -c1-400  > " + globals.long_running_query_sorted_file)
+        os.system("grep INFO  /tmp/filtered_query_file  | sort -k4nr,4  | cut -c1-2000  > " + globals.long_running_query_sorted_file)
+        os.system("gzip " + globals.long_running_query_file )
         os.system("head -1000 " + globals.long_running_query_sorted_file + " | grep INFO | cut -c1-16 > /tmp/q1")
         os.system("head -1000 " + globals.long_running_query_sorted_file + " | grep INFO | cut -c36-40 > /tmp/q2")
         os.system("echo 't,duration'  > /tmp/qqq ")
@@ -84,6 +113,7 @@ def admin_report_check():
         #run_shell.run("grep -v '^#\' " + globals.conf_directory + "/neo4j.conf | sed -e  '/^$/d' | sort ","Non-default Neo4j.conf settings",1)
 
     #get_config_recommendation()
+    get_memory_cpu()
     get_and_print_debug_errors()
     print_top_long_running_queries()
     plot_long_running_queries("LongRunningQueries")
@@ -113,6 +143,41 @@ def plot_long_running_queries(metric_category):
     plot_metric.run2(df,"query")
     os.system("rm /tmp/q1; rm /tmp/q2 ")
     return df
+
+
+
+def get_memory_cpu():
+
+        warnings.simplefilter(action='ignore', category=FutureWarning)
+
+        print_dataframe.run2(0, "\n")
+        print_dataframe.run2(0, "\n")
+        print_dataframe.run2(0,"###################################################################")
+        print_dataframe.run2(0, " ")
+        print_dataframe.run2(0,"Memory/cpu Configuration Settings")
+        print_dataframe.run2(0, "\n")
+        print_dataframe.run2(0, "\n")
+
+        memory_cpu_file = globals.logs_directory + "/memory_cpu_debug.log"
+       
+
+        debug_file = globals.logs_directory + "/debug.log"
+        os.system("egrep  'Total Physical memory|dbms.memory.pagecache|heap.max_size|heap.initial_size|cpus|mapped' " +   debug_file + "  | sort | uniq | sed -e 's/^[ \t]*//' > /tmp/mem.txt")
+
+        f = open("/tmp/mem.txt", "r")
+        lines = f.readlines()
+        f.close()
+
+        line_count=len(lines)
+        i=0
+        for line in lines:
+              i=i+1
+              if i >= (line_count - 100 ):
+                   #print(line , end = '')
+                   print_dataframe.run2(0, "----> "+ line )
+
+        print_dataframe.run2(0, "\n")
+        print_dataframe.run2(0, "\n")
 
 
 def get_and_print_debug_errors():
@@ -156,7 +221,6 @@ def get_and_print_debug_errors():
 
         print_dataframe.run2(0, "\n")
         print_dataframe.run2(0, "\n")
-
 
 def print_top_long_running_queries():
 

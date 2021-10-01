@@ -2,6 +2,9 @@ from bin import globals
 from bin import print_log
 import os
 
+#  --> 0    -> value 
+#  --> 1    -> counter-integer
+#  --> 0    -> counter-time(ms)
 
 def run(metric_category):
     #print (">>> Inside get_filenames.run")
@@ -91,13 +94,20 @@ def run(metric_category):
             ["neo4j." + globals.database + ".neo4j.count.relationship.csv", 0, "", ""]
         ]
     elif metric_category == 'object':
-        filenames = [
-            ["neo4j." + globals.database + ".ids_in_use.node.csv", 1, "-ps", "neo4j.ids_in_use.node.csv"],
-            ["neo4j." + globals.database + ".ids_in_use.property.csv", 1, "-ps", "neo4j.ids_in_use.property.csv"],
-            ["neo4j." + globals.database + ".ids_in_use.relationship.csv", 1, "-ps", "neo4j.ids_in_use.relationship.csv"],
-            ["neo4j." + globals.database + ".ids_in_use.relationship_type.csv", 1, "-ps", "neo4j.ids_in_use.relationship_type.csv"]
+        filenames = [  # value (increasing -> so can be treated like counter, hence, 1)
+            #["neo4j." + globals.database + ".ids_in_use.node.csv", 1, "-ps", "neo4j.ids_in_use.node.csv"],
+            ["neo4j." + globals.database + ".ids_in_use.property.csv", 1, "-ps", "neo4j.ids_in_use.property.csv"]
+            #["neo4j." + globals.database + ".ids_in_use.relationship.csv", 1, "-ps", "neo4j.ids_in_use.relationship.csv"],
+            #["neo4j." + globals.database + ".ids_in_use.relationship_type.csv", 1, "-ps", "neo4j.ids_in_use.relationship_type.csv"]
         ]
 
+    elif metric_category == 'transaction2':
+        filenames = [
+            #["neo4j." + globals.database + ".transaction.peak_concurrent.csv", 0, "", "neo4j.transaction.peak_concurrent.csv"],
+            #["neo4j." + globals.database + ".transaction.started.csv", 1, "-ps", "neo4j.transaction.started.csv"],
+            #["neo4j." + globals.database + ".transaction.active.csv", 0, "-ps", "neo4j.transaction.active.csv"],
+            ["neo4j." + globals.database + ".transaction.committed.csv", 1, "-ps", "neo4j.transaction.committed.csv"]
+            ]
     elif metric_category == 'transaction':
         filenames = [
             ["neo4j." + globals.database + ".transaction.peak_concurrent.csv", 0, "", "neo4j.transaction.peak_concurrent.csv"],

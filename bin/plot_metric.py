@@ -12,6 +12,7 @@ import matplotlib
 
 def run(df, metric_category):
 
+    import matplotlib.pyplot as plt
     warnings.simplefilter(action='ignore', category=FutureWarning)
     SMALL_SIZE = 5
     MEDIUM_SIZE = 10
@@ -23,6 +24,7 @@ def run(df, metric_category):
     plt.rc('ytick', labelsize=SMALL_SIZE)    # fontsize of the tick labels
     plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
     plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    plt.ticklabel_format(useOffset=False)
     #matplotlib.rc('font', size=SMALL_SIZE)
     #matplotlib.rc('axes', titlesize=SMALL_SIZE)
 
@@ -81,6 +83,7 @@ def run(df, metric_category):
                 plot_delete_list = list(set(column_names) - set(plot_keep_list))
 
 
+
                 if metric_category=='query':
                     df_plot=df
                     df_plot.plot.scatter(x='t', y='Duration', c='DarkBlue')
@@ -89,10 +92,10 @@ def run(df, metric_category):
                     df_plot.plot()
 
                 #write html to file
-                df_html=df.T.to_html()
-                html_file=open(html_filename, "w")
-                html_file.write(df_html)
-                html_file.close()
+                #df_html=df.T.to_html()
+                #html_file=open(html_filename, "w")
+                #html_file.write(df_html)
+                #html_file.close()
 
                 plt.title(metric_category)
                 pdf.savefig()

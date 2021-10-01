@@ -51,12 +51,17 @@ def run(metric_category):
         ]
     elif metric_category == 'cypher':
         plot_group = [
-            ["replan"]
+            ["replan_event"],
+            ["replan_wait"],
+            ['replan_wait(.*?)(Avg|Max)']
         ]
     elif metric_category == 'bolt':
         plot_group = [
             ["accumulated"],
-            ["messages", "sessions"],
+            ["messages"], 
+            ['messages(.*?)Sum'],
+            ['messages(.*?)(Avg|Max)'],
+            ["sessions"],
             ["connection"]
         ]
     elif metric_category == 'page_cache':
@@ -68,9 +73,10 @@ def run(metric_category):
         ]
     elif metric_category == 'check_point':
         plot_group = [
-            ["duration","ckp.total_time_Sum"],
+            ["events"],
             ["total_time"],
-            ["events"]
+            ["duration","ckp.total_time_Sum"],
+            ['duration(.*?)(Avg|Max)']
         ]
     elif metric_category == 'jvm_thread':
         plot_group = [

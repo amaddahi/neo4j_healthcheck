@@ -16,7 +16,8 @@ def run(interval, df, metric_category):
 
     (metric_category_abbr, db_category_abbr) = get_metric_category_abbr.run(metric_category)
 
-
+    # used to rename the column for df/display 
+    #
     for file in filenames:
         if metric_category in ('transaction','object','cypher','log_rotation','jvm_gc'):
                file_token_name = file[3]
@@ -90,5 +91,9 @@ def run(interval, df, metric_category):
             #print(df.head(10))
             #print(val_label)
             df[val_label]=df[val_label]/(1024*1024)
+
+    if globals.debug:
+        print (df.head(10))
+        print ("Exiting cumulative counter")
 
     return df
