@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 # Author: Ali Maddahian
-# Last Update 09/26/2021
+# Last Update 09/16/2021
 
 import sys
 import os 
@@ -178,8 +178,9 @@ def main(argv):
                   interval, periods, options)
 
         sys.stdout.flush()
+
         
-        #convert_txt_pdf.run2()
+        convert_txt_pdf.run2()
 
 
 if __name__ == "__main__":
