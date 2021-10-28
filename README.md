@@ -167,18 +167,23 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	o sudo apt-get install software-properties-common
 	o sudo apt-add-repository universe
 	o sudo apt-get update
+	o sudo apt install unzip
 
 	# Python2
 	o sudo apt-get install python-pip
 	o sudo pip install pandas
 	o sudo pip install configobj
 	o sudo pip install matplotlib
+	o sudo pip install fpdf
+	o sudo pip install PyPDF2
 
 	# Python3
 	o sudo apt-get install python3-pip
 	o sudo pip3 install pandas
 	o sudo pip3 install configobj
 	o sudo pip3 install matplotlib
+	o sudo pip3 install fpdf
+	o sudo pip3 install PyPDF2
 
 
 	 
