@@ -9,16 +9,14 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 ```
         
 	
-	<Min|H|D|W|Y>
-	--database                        <dbname>
-	[ -c | --customer              ]
+	[--database                    ]  < dbname >
+	[ -c | --customer              ]  < projectName >
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
 	[ -s | --startdate             ]  < yyyy-mm-dd HH:MM:SS >
 	[ -e | --enddate               ]  < yyyy-mm-dd HH:MM:SS >
 	[ -v | --verbose               ]
 	[ -d | --display_precision     ]
-	[ -b | --bolt_port             ]
 	[ -v | --verbose               ]
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
