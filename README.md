@@ -1,92 +1,75 @@
+
 #### Usage:   nj_perf [ optional args ]
 
 Purpose: Report and plot various statistics about the database/cluster as well as its current state for 
-         Neo4j versions 4.x (please see the 3.5.x branch for earlier versions)
+         Neo4j versions 3.3.x, 3.4.x and 3.5.x 
 
 #### Inputs:
 ```
-	<Min|H|D|W|Y>
-	[      --host_ip               ]
+        
+	
+	[--database                    ]  < dbname >
+	[ -c | --customer              ]  < projectName >
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
 	[ -s | --startdate             ]  < yyyy-mm-dd HH:MM:SS >
 	[ -e | --enddate               ]  < yyyy-mm-dd HH:MM:SS >
-	[ -c | --checkdb               ]  
 	[ -v | --verbose               ]
 	[ -d | --display_precision     ]
-	[ -b | --bolt_port             ]
 	[ -v | --verbose               ]
-        [ -r | --admin_report_dir      ]
-	[ -m | --metric      ]  < "store,"count","transaction"|"page_cache"|"bolt"|"causal_clustering"|
+	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
+				"count"|"query"|"operation"|"store"|"file_descriptors"
 				"all"|"none" >
+				
+				
 ```
 
+ 
 *  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 *  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
 *  If interval and periods are both not specified, daily aggregation will be performed by default
 *  If no metric category is specified, it will report on "ALL" metrics
-*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
-*  To avoid running historical metric analysis, use "--metric none"
 
 ``` 
-*  Additionally, --checkdb option will report on the following(if executed on a host with live database):
 
-               Uptime
-               Neo4j Kernel
-               Database Restarts:
-               Disk Utilization
-               Neo4j Store Size
-               Database/Index Size History
-               Transaction Logs
-               Host Processes
-               vmstat
-               netstats
-               Neo4j Top 5 Slowest Queries
-               Neo4j Top 5 Longest GC pauses
-               Neo4j Node Density
-               Neo4j Active Queries
-               Neo4j Active Long Running Queries ( > 60s )
-               Neo4j Transactions
-               Neo4j Locks
-               Non-default Neo4j.conf settings
-               Recommended Configuration Settings
 ```
 
 #### Examples:
 
-               -c demo  --database neo4j -p 3  -i D -m all
-               
-               -c demo  --database test2 -p 3  -i D -m all  -r <FullPathToAdminReport-Unzipped>
-               
-               -c demo --database neo4j  -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
-	             # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
+$ nj_perf --customer=prodx --database neo4j -m all  -i H -s '2022-01-11 07:00' -e '2022-01-11 11:00'  -r ~/dbadminlogs 
+OR
+$ sudo docker run -v /tmp/results:/app/results -v /dbadminlogs:/app/report nj_perf_x:latest -c prodx --database neo4j -p 3 -i D -m all -r /app/report
+
+
+               -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
+	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
 		    
-               -c demo --database neo4j  --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
+               --startdate 2019-01-01 --enddate 2019-01-11  --metric transaction
                     # Report on ten individual days, starting on 2019-01-01
 
-               -c demo --database neo4j  --interval D   --periods 7  --startdate 2019-01-01  --metric all
+               --interval D   --periods 7  --startdate 2019-01-01  --metric all
                     # Report on seven individual days, starting on 2019-01-01
 
-               -c demo --database neo4j  --interval D   --periods 7  --enddate 2019-01-01 --metric cypher
+               --interval D   --periods 7  --enddate 2019-01-01 --metric cypher
                     # Report on seven individual days, starting on 2008-01-01
 
-               -c demo --database neo4j  --interval W  --periods 4  --startdate 2019-01-01
+               --interval W  --periods 4  --startdate 2019-01-01
                     # Report on four one-week periods
 
-               -c demo --database neo4j  --interval W  --periods 4  --enddate 2019-01-01
+               --interval W  --periods 4  --enddate 2019-01-01
                     # Report on four one-week periods
 
-               -c demo --database neo4j  --interval Y -periods 2  --startdate 2018-01-01
-	   	       
+               --interval Y -periods 2  --startdate 2018-01-01
+	     	       
 	    
 	       
 	       
 
 #### Sample Output: 
 
-`Usage Example:    $nj_perf -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
+`Usage Example:    $nj_perf --customer=prod --database neo4j -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
 
 <pre>
 date                        2019-01-06  2019-01-13  2019-01-20  2019-01-27  2019-02-03
@@ -191,36 +174,17 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	   By default, the script will look for the metrics directory in the current working directory, and if not found, 
 	   it will then look under the directory specified by NEO4j_HOME.
 	   
-
 #### To Run in Docker:
 
-         $docker build [--no-cache] -t nj_perf:latest -f Dockerfile .
+         $docker build -t nj_perf_x:latest -f Dockerfile .
 	 
-	 $docker run -v /tmp/metrics/:/app/metrics -v /tmp/results:/app/results nj_perf:latest -c pan --database neo4j -p 3 -i D -m all
+	 Example: $sudo docker run 
+	 	-v /tmp/results:/app/results \
+		-v /dbadminlogs:/app/report \
+		nj_perf_x:latest \
+		-c prodx --database neo4j -p 3 -i D -m all \
+		-r /app/report
 	 
-	 $docker run -v /tmp/metrics/:/app/metrics -v /tmp/results:/app/results nj_perf:latest -c pan --database neo4j -p 3 -i D -m all
+      
 	 
-         $docker run                                                   \
-	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
-	 -v /tmp/metrics_plots:/app/metrics_plots                      \
-	 -v $NEO4J_HOME/metrics:/app/metrics                           \
-	 -v $NEO4J_HOME/logs:/app/logs                                 \
-	 -v $NEO4J_HOME/conf:/app/conf                                 \
-	 -v $NEO4J_HOME/bin:/app/bin                                   \
-	 -v $NEO4J_HOME/data:/app/data                                 \
-	 --host_ip=< NEO4J_INSTANCE_IP >                               \
-	 nj_perf:latest                                           \
-	 -m page_cache -p 3 -i Min -c -b 7617 -v 
-	 
-	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
-	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
-	 non-default port.   Furthermore, the instance is running on host_ip address(can be determined by executing: 
-	 `curl ifconfig.co`.
-	 
-	 docker run                                    \
-	 -v <DIRPATH>/metrics:/app/metrics             \
-	 -v <DIRPATH>/results:/app/results \
-	 neo4j_health:latest  -m cypher -v
-	 
-	 #The above example only generates report/plots for the provide metrics.
 
