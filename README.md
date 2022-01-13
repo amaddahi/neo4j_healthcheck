@@ -60,9 +60,7 @@ $ nj_perf --customer=prod --database neo4j -m all  -i H -s '2022-01-11 07:00' -e
                     # Report on four one-week periods
 
                --interval Y -periods 2  --startdate 2018-01-01
-	       
-	       --checkdb -metric none
-	       
+	     	       
 	    
 	       
 	       
