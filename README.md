@@ -7,13 +7,15 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
 #### Inputs:
 ```
+        
+	
 	<Min|H|D|W|Y>
-	[      --host_ip               ]
+	--database                        <dbname>
+	[ -c | --customer              ]
 	[ -i | --interval              ]  < S|Min|H|D|W|Y >
 	[ -p | --periods               ]  < nn >
 	[ -s | --startdate             ]  < yyyy-mm-dd HH:MM:SS >
 	[ -e | --enddate               ]  < yyyy-mm-dd HH:MM:SS >
-	[ -c | --checkdb               ]  
 	[ -v | --verbose               ]
 	[ -d | --display_precision     ]
 	[ -b | --bolt_port             ]
@@ -24,39 +26,21 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 				"all"|"none" >
 ```
 
+ 
 *  If no options are specified, metrics will be aggregated hourly over the last 24 hours of available data
 *  Only specify startdate or enddate (not both) when also specifying interval and periods argumments
 *  If interval and periods are both not specified, daily aggregation will be performed by default
 *  If no metric category is specified, it will report on "ALL" metrics
-*  To running host/online-db  healthchecks, use "--checkdb=True" or "-c"
-*  To avoid running historical metric analysis, use "--metric none"
 
 ``` 
-*  Additionally, --checkdb option will report on the following:
 
-               Uptime
-               Neo4j Kernel
-               Database Restarts:
-               Disk Utilization
-               Neo4j Store Size
-               Database/Index Size History
-               Transaction Logs
-               Host Processes
-               vmstat
-               netstats
-               Neo4j Top 5 Slowest Queries
-               Neo4j Top 5 Longest GC pauses
-               Neo4j Node Density
-               Neo4j Active Queries
-               Neo4j Active Long Running Queries ( > 60s )
-               Neo4j Transactions
-               Neo4j Locks
-               Non-default Neo4j.conf settings
-               Recommended Configuration Settings
 ```
 
 #### Examples:
-               
+
+$ nj_perf --customer=prod --database neo4j -m all  -i H -s '2022-01-11 07:00' -e '2022-01-11 11:00'  -r ~/dbadminlogs 
+
+
                -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
 	            # Report aggregation on 30 seconds between 04:42:14 and 04:43:15 hours 
 		    
