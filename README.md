@@ -23,7 +23,10 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
+				"count"|"query"|"operation"|"store"|"file_descriptors"
 				"all"|"none" >
+				
+				
 ```
 
  
