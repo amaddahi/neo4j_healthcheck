@@ -169,7 +169,7 @@ tx.terminated_write-ps_Max           0           1           1           1      
 #### Instructions to run the script:
 
 	1) Download the script
-	2) chmod +x neo4j_health
+	2) chmod +x nj_perf
 	3) ensure the python along with its dependencies as outline above are installed
 	4) Run the script.   If [ -c | --checkdb ] option is optionally used, then ensure DB_USER, DB_PASSWD as well as
 	   NEO4J_HOME are also set.  The script does expect to run an analysis of stats in the metrics directory. 
