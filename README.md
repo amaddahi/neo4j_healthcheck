@@ -16,7 +16,6 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 	[ -e | --enddate               ]  < yyyy-mm-dd HH:MM:SS >
 	[ -v | --verbose               ]
 	[ -d | --display_precision     ]
-	[ -v | --verbose               ]
 	[ -m | --metric      ]  < "transaction"|"page_cache"|"bolt"|"causal_clustering"|
 				"cypher"|"check_point"|"object"|"network"|"server"|
 				"jvm_gc"|"jvm_memory"|"jvm_thread"|"log_rotation"|
