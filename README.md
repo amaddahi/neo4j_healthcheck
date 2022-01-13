@@ -39,7 +39,9 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 #### Examples:
 
 $ nj_perf --customer=prodx --database neo4j -m all  -i H -s '2022-01-11 07:00' -e '2022-01-11 11:00'  -r ~/dbadminlogs 
+
 OR
+
 $ sudo docker run -v /tmp/results:/app/results -v /dbadminlogs:/app/report nj_perf_x:latest -c prodx --database neo4j -p 3 -i D -m all -r /app/report
 
 
