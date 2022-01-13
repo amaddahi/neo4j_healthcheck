@@ -1,6 +1,6 @@
 
 
-#### Usage:   neo4j_health [ optional args ]
+#### Usage:   nj_perf [ optional args ]
 
 Purpose: Report and plot various statistics about the database/cluster as well as its current state for 
          Neo4j versions 3.3.x, 3.4.x and 3.5.x 
