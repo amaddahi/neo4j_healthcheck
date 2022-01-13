@@ -41,7 +41,9 @@ Purpose: Report and plot various statistics about the database/cluster as well a
 
 #### Examples:
 
-$ nj_perf --customer=prod --database neo4j -m all  -i H -s '2022-01-11 07:00' -e '2022-01-11 11:00'  -r ~/dbadminlogs 
+$ nj_perf --customer=prodx --database neo4j -m all  -i H -s '2022-01-11 07:00' -e '2022-01-11 11:00'  -r ~/dbadminlogs 
+OR
+$ sudo docker run -v /tmp/results:/app/results -v /dbadminlogs:/app/report nj_perf_x:latest -c prodx --database neo4j -p 3 -i D -m all -r /app/report
 
 
                -i S -s '2019-03-29 04:42:45' -e '2019-03-29 04:43:15' -d
@@ -177,31 +179,17 @@ tx.terminated_write-ps_Max           0           1           1           1      
 	   
 #### To Run in Docker:
 
-         $docker build -t neo4j_health:latest -f Dockerfile .
+         $docker build -t nj_perf_x:latest -f Dockerfile .
 	 
-         $docker run                                                   \
-	 -e DB_USER=neo4j -e DB_PWD=test -e NEO4J_HOME=$NEO4J_HOME     \
-	 -v /tmp/metrics_plots:/app/metrics_plots                      \
-	 -v $NEO4J_HOME/metrics:/app/metrics                           \
-	 -v $NEO4J_HOME/logs:/app/logs                                 \
-	 -v $NEO4J_HOME/conf:/app/conf                                 \
-	 -v $NEO4J_HOME/bin:/app/bin                                   \
-	 -v $NEO4J_HOME/data:/app/data                                 \
-	 --host_ip=< NEO4J_INSTANCE_IP >                               \
-	 neo4j_health:latest                                           \
-	 -m page_cache -p 3 -i Min -c -b 7617 -v 
+	 Example: $sudo docker run 
+	 	-v /tmp/results:/app/results \
+		-v /dbadminlogs:/app/report \
+		nj_perf_x:latest \
+		-c prodx --database neo4j -p 3 -i D -m all \
+		-r /app/report
 	 
-	 # This example reports/plots on metrics, as well as runs a healthcheck against the logs/conf files as well as
-	 the online DB.   Bolt port is by default set to 7687, however in this example, our instance is running on a 
-	 non-default port.   Furthermore, the instance is running on host_ip address(can be determined by executing: 
-	 `curl ifconfig.co`.
+      
 	 
-	 docker run                                    \
-	 -v <DIRPATH>/metrics:/app/metrics             \
-	 -v <DIRPATH>/metrics_plots:/app/metrics_plots \
-	 neo4j_health:latest  -m cypher -v
-	 
-	 #The above example only generates report/plots for the provide metrics.
 	 
 
 
