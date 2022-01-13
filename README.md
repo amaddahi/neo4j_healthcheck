@@ -67,7 +67,7 @@ $ nj_perf --customer=prod --database neo4j -m all  -i H -s '2022-01-11 07:00' -e
 
 #### Sample Output: 
 
-`Usage Example:    $neo4j_health -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
+`Usage Example:    $nj_perf --customer=prod --database neo4j -m transaction -s '2019-01-01' -e '2019-02-02' -i W`
 
 <pre>
 date                        2019-01-06  2019-01-13  2019-01-20  2019-01-27  2019-02-03
